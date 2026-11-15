@@ -63,6 +63,6 @@ export const resumeApi = {
     })
   },
 }
-export const matchingApi = { recommendations: () => request('/careers/matches', undefined, async () => careers.map(c => ({ id: c.id, estimate: estimate(c) })).sort((a, b) => b.estimate - a.estimate)) }
+export const matchingApi = { recommendations: () => request('/careers/matches', undefined, async () => careers.map(c => { const matched = c.required.filter(s => userSkills.includes(s)); return { id: c.id, title: c.title, category: c.category, compatibility: Math.round(100 * matched.length / c.required.length), matched, missing: c.required.filter(s => !userSkills.includes(s)) } }).sort((a, b) => b.compatibility - a.compatibility)) }
 export const gapsApi = { analyse: (careerId: string) => request(`/careers/${careerId}/gaps`, undefined, async () => { const c = careers.find(x => x.id === careerId); return c ? analyse(c) : null }) }
 export const whatIfApi = { simulate: (extraSkills: string[]) => request('/what-if', post({ extraSkills }), async () => careers.map(c => { const current = estimate(c); const hypothetical = estimateFor(c, [...userSkills, ...extraSkills]); return { id: c.id, current, hypothetical, change: hypothetical - current, stillNeeded: c.required.filter(s => !userSkills.includes(s) && !extraSkills.includes(s)) } })) }
