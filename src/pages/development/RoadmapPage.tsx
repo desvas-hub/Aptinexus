@@ -7,7 +7,6 @@ import { byName, priorityOf, statusOf } from '../../data/skills'
 import { gapsApi } from '../../services/api'
 import { useRemote } from '../../hooks/useRemote'
 import { useAuth } from '../../contexts/AuthContext'
-import { useMemo } from 'react'
 
 const tasks = (s: string) => [`Study the fundamentals of ${s}`, `Complete a practice exercise in ${s}`, `Build a mini project that uses ${s}`]
 export default function RoadmapPage() {
