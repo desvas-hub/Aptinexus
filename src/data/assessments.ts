@@ -1,4 +1,4 @@
-export interface Question { q: string; options: string[]; answer: number }
+export interface Question { q: string; options: string[]; answer?: number }
 export interface Assessment { id: string; title: string; skill: string; questions: Question[] }
 export const assessments: Assessment[] = [
   { id: 'py', title: 'Python basics', skill: 'Python', questions: [

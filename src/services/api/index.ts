@@ -19,7 +19,7 @@ import { userData } from './userData'
 import { careers } from '../../data/careers'
 import { library } from '../../data/skills'
 import { resources } from '../../data/resources'
-import { assessments } from '../../data/assessments'
+import { assessments, type Assessment } from '../../data/assessments'
 import { edges, nodes } from '../../data/graph'
 import type { ProfileData } from '../../data/profile'
 
@@ -32,7 +32,17 @@ export const roadmapApi = {
 export const careersApi = { list: () => request('/careers', undefined, async () => careers), get: (id: string) => request(`/careers/${id}`, undefined, async () => careers.find(c => c.id === id)) }
 export const skillsApi = { list: () => request('/skills', undefined, async () => library) }
 export const resourcesApi = { list: () => request('/resources', undefined, async () => resources) }
-export const assessmentsApi = { list: () => request('/assessments', undefined, async () => assessments) }
+export const assessmentsApi = {
+  list: () => request<Assessment[]>('/assessments', undefined, async () => assessments),
+  submit: (id: string, answers: number[]) => request<{ assessmentId: string; score: number; total: number; percentage: number; correctAnswers: number[]; feedback: string }>(`/assessments/${id}/submit`, post({ answers }), async () => {
+    const item = assessments.find(a => a.id === id)
+    if (!item) throw new Error('Assessment not found')
+    const correctAnswers = item.questions.map(q => q.answer ?? -1)
+    const score = answers.filter((answer, index) => answer === correctAnswers[index]).length
+    const total = item.questions.length
+    return { assessmentId: id, score, total, percentage: total ? Math.round(100 * score / total) : 0, correctAnswers, feedback: total && score / total >= 0.75 ? 'Strong result. Add a project or demonstration to back it up.' : total && score / total >= 0.5 ? 'Partial result. Revisit the topics you missed.' : 'This skill needs more practice.' }
+  }),
+}
 export const skillGraphApi = { get: () => request('/skillgraph', undefined, async () => ({ nodes, edges })) }
 
 // ---- Intelligence endpoints (mock: simple demo rules, not AI) ----
