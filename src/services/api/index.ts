@@ -59,7 +59,7 @@ export const resumeApi = {
     body.append('file', file)
     return request<ResumeAnalysis>('/resume/analyze', { method: 'POST', body }, async () => {
       await wait(null, 900)
-      return { filename: file.name, extractedCharacters: 0, suggestions: resumeSample, message: 'Demo output only. The mock mode does not read the uploaded file.' }
+      return { filename: file.name, extractedCharacters: 0, suggestions: resumeSample.map(s => ({ ...s, origin: s.origin as ResumeSuggestion['origin'] })), message: 'Demo output only. The mock mode does not read the uploaded file.' }
     })
   },
 }
