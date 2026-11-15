@@ -1,0 +1,47 @@
+import { request } from './client'
+import { delay, mockDashboard, mockUser } from '../mock/data'
+import type { DashboardData, User } from '../../types'
+
+const post = (body: unknown): RequestInit => ({ method: 'POST', body: JSON.stringify(body) })
+
+export const authApi = {
+  login: (email: string, password: string) =>
+    request<{ user: User; token: string }>('/auth/login', post({ email, password }), () => delay({ user: { ...mockUser, email }, token: 'demo-token' })),
+  register: (name: string, email: string, password: string) =>
+    request<{ user: User; token: string }>('/auth/register', post({ name, email, password }), () => delay({ user: { ...mockUser, name, email }, token: 'demo-token' })),
+}
+export const analyticsApi = {
+  dashboard: () => request<DashboardData>('/analytics/dashboard', undefined, () => delay(mockDashboard, 600)),
+}
+
+// ---- Per-user data (mock: localStorage; real: REST) ----
+import { userData } from './userData'
+import { careers } from '../../data/careers'
+import { library } from '../../data/skills'
+import { resources } from '../../data/resources'
+import { assessments } from '../../data/assessments'
+import { edges, nodes } from '../../data/graph'
+import type { ProfileData } from '../../data/profile'
+
+export const profilesApi = { get: (uid: string, init: ProfileData) => userData.get('profile', uid, init), save: (uid: string, p: ProfileData) => userData.save('profile', uid, p) }
+export const roadmapApi = {
+  progress: (uid: string | undefined, careerId: string) => userData.get<string[]>(`roadmap:${careerId}`, uid, []),
+  totalDone: async (uid: string | undefined) => (await Promise.all(careers.map(c => userData.get<string[]>(`roadmap:${c.id}`, uid, [])))).reduce((n, l) => n + l.length, 0),
+}
+// ---- Catalogs (mock: bundled sample data) ----
+export const careersApi = { list: () => request('/careers', undefined, async () => careers), get: (id: string) => request(`/careers/${id}`, undefined, async () => careers.find(c => c.id === id)) }
+export const skillsApi = { list: () => request('/skills', undefined, async () => library) }
+export const resourcesApi = { list: () => request('/resources', undefined, async () => resources) }
+export const assessmentsApi = { list: () => request('/assessments', undefined, async () => assessments) }
+export const skillGraphApi = { get: () => request('/skillgraph', undefined, async () => ({ nodes, edges })) }
+
+// ---- Intelligence endpoints (mock: simple demo rules, not AI) ----
+import { delay as wait } from '../mock/data'
+import { resumeSample } from '../mock/resume'
+import { estimate, estimateFor, userSkills } from '../../data/careers'
+import { analyse } from '../../data/skills'
+
+export const resumeApi = { analyse: (fileName: string) => request<typeof resumeSample>('/resume/analyze', post({ fileName }), () => wait(resumeSample, 900)) }
+export const matchingApi = { recommendations: () => request('/careers/matches', undefined, async () => careers.map(c => ({ id: c.id, estimate: estimate(c) })).sort((a, b) => b.estimate - a.estimate)) }
+export const gapsApi = { analyse: (careerId: string) => request(`/careers/${careerId}/gaps`, undefined, async () => { const c = careers.find(x => x.id === careerId); return c ? analyse(c) : null }) }
+export const whatIfApi = { simulate: (extraSkills: string[]) => request('/what-if', post({ extraSkills }), async () => careers.map(c => ({ id: c.id, current: estimate(c), hypothetical: estimateFor(c, [...userSkills, ...extraSkills]) }))) }
