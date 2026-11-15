@@ -1,8 +1,8 @@
-import { catMeta, edges, nodes } from '../../data/graph'
+import { catMeta } from '../../data/graph'
 import type { GraphProps } from './Graph3D'
 
 /** Simplified 2D fallback used when WebGL is unavailable. */
-export default function Graph2D({ pos, visible, selected, matched, linked, onSelect }: Omit<GraphProps, 'controls'>) {
+export default function Graph2D({ nodes, edges, pos, visible, selected, matched, linked, onSelect }: Omit<GraphProps, 'controls'>) {
   const P = (id: string) => ({ x: 50 + pos[id][0] * 5.5, y: 50 + pos[id][2] * 5.5 })
   return (
     <svg viewBox="0 0 100 100" className="h-full w-full" role="img" aria-label="2D skill graph">

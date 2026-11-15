@@ -5,7 +5,7 @@ from app.catalog_data import ASSESSMENTS, CAREERS, GRAPH_EDGES, GRAPH_NODES, RES
 from app.core.database import get_db
 from app.dependencies import get_current_user
 from app.models import User
-from app.services.intelligence import career_gaps, dashboard_data, simulate_career_matches
+from app.services.intelligence import career_gaps, dashboard_data, evidenced_skill_names, simulate_career_matches, user_skill_names
 
 router = APIRouter(tags=["AptiNexus"])
 
@@ -96,8 +96,18 @@ def submit_assessment(
 
 
 @router.get("/skillgraph")
-def skillgraph(user: User = Depends(get_current_user)):
-    return {"nodes": GRAPH_NODES, "edges": GRAPH_EDGES}
+def skillgraph(user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    acquired = user_skill_names(db, user)
+    demonstrated = evidenced_skill_names(db, user)
+    nodes = []
+    for source in GRAPH_NODES:
+        item = dict(source)
+        if item.get("cat") == "skill":
+            item.pop("status", None)
+            if item["label"] in acquired:
+                item["status"] = "Demonstrated" if item["label"] in demonstrated else "Claimed"
+        nodes.append(item)
+    return {"nodes": nodes, "edges": GRAPH_EDGES}
 
 
 @router.get("/careers/{career_id}/gaps")
