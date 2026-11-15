@@ -11,7 +11,8 @@ from app.routers import auth, catalogs, users
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Convenient for local prototyping. Use Alembic migrations before production.
-    Base.metadata.create_all(bind=engine)
+    if settings.auto_create_tables:
+        Base.metadata.create_all(bind=engine)
     yield
 
 
