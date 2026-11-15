@@ -19,10 +19,20 @@ export default function ResumeAnalysisPage() {
   const [items, setItems] = useState<Item[] | null>(null)
   const [busy, setBusy] = useState(false)
   const [edit, setEdit] = useState<{ id: number; text: string } | null>(null)
-  const [msg, setMsg] = useState('')
+  const [msg, setMsg] = useState('')\n  const [analysisMessage, setAnalysisMessage] = useState('')
 
   const pick = (f?: File) => { if (!f) return; const e = validateResume(f); setErr(e ?? ''); setFile(e ? null : f); setItems(null); setMsg('') }
-  const run = async () => { setBusy(true); const found = (await resumeApi.analyse(file?.name ?? '')) as Omit<Item, 'id' | 'state'>[]; setItems(found.map((s, i) => ({ ...s, id: i, state: 'pending' }))); setBusy(false) }
+  const run = async () => {
+    if (!file || busy) return
+    setBusy(true); setErr(''); setItems(null)
+    try {
+      const result = await resumeApi.analyse(file)
+      setAnalysisMessage(result.message)
+      setItems(result.suggestions.map((s, i) => ({ ...s, id: i, state: 'pending' as const })))
+    } catch (error) {
+      setErr(error instanceof Error ? error.message : 'Could not analyse this resume.')
+    } finally { setBusy(false) }
+  }
   const set = (id: number, patch: Partial<Item>) => setItems(l => l && l.map(i => (i.id === id ? { ...i, ...patch } : i)))
   const addToProfile = async () => {
     const p = await profilesApi.get(user.id, loadProfile(user)); let n = 0
@@ -38,10 +48,10 @@ export default function ResumeAnalysisPage() {
         <button className="btn-ghost" onClick={() => input.current?.click()}>Choose a file</button>
         {file && <p className="text-sm text-[#1d1d1f]">{file.name} <span className="text-[#6e6e73]">· {(file.size / 1024).toFixed(0)} KB · {file.name.split('.').pop()?.toUpperCase()}</span></p>}
         {err && <p role="alert" className="text-sm text-[#d70015]">{err}</p>}
-        {file && <button className="btn-primary" disabled={busy} onClick={run}>{busy ? 'Analysing…' : 'Run demo analysis'}</button>}
+        {file && <button className="btn-primary" disabled={busy} onClick={run}>{busy ? 'Analysing…' : 'Analyse resume'}</button>}
       </div>
       {items && <>
-        <p role="status" className="rounded-xl border border-amber-400/30 bg-amber-400/10 p-3 text-sm text-[#b25000]">Demo output: no backend is connected, so your file was not read. These are sample results to show the review flow.</p>
+        <p role="status" className="rounded-xl border border-[#007AFF]/20 bg-[#007AFF]/5 p-3 text-sm text-[#1d1d1f]">{analysisMessage}</p>
         {sections.map(sec => (
           <section key={sec} className="glass p-5"><h2 className="mb-3 font-medium text-[#1d1d1f]">{sec}</h2>
             <ul className="space-y-2">{items.filter(i => i.section === sec).map(i => (
