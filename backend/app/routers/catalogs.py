@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, File, UploadFile
 from sqlalchemy.orm import Session
 
 from app.catalog_data import ASSESSMENTS, CAREERS, GRAPH_EDGES, GRAPH_NODES, RESOURCES, SKILLS
@@ -117,10 +117,74 @@ def what_if(payload: dict, user: User = Depends(get_current_user), db: Session =
 
 
 @router.post("/resume/analyze")
-def resume_analyze(payload: dict, user: User = Depends(get_current_user)):
-    # The current frontend sends only a file name, not resume contents. Do not
-    # pretend to analyse a document we have not received.
+async def resume_analyze(
+    file: UploadFile = File(...),
+    user: User = Depends(get_current_user),
+):
+    """Extract resume text and return conservative, reviewable profile suggestions."""
+    import io
+    import re
+    from docx import Document
+    from pypdf import PdfReader
+
+    filename = (file.filename or "").lower()
+    if not (filename.endswith(".pdf") or filename.endswith(".docx")):
+        raise HTTPException(status_code=415, detail="Upload a PDF or DOCX file")
+    raw = await file.read(5 * 1024 * 1024 + 1)
+    if len(raw) > 5 * 1024 * 1024:
+        raise HTTPException(status_code=413, detail="Resume must be 5 MB or smaller")
+    if not raw:
+        raise HTTPException(status_code=400, detail="The uploaded file is empty")
+    try:
+        if filename.endswith(".pdf"):
+            reader = PdfReader(io.BytesIO(raw))
+            if reader.is_encrypted:
+                raise HTTPException(status_code=422, detail="Password-protected PDFs are not supported")
+            text = "\n".join(page.extract_text() or "" for page in reader.pages[:20])
+        else:
+            document = Document(io.BytesIO(raw))
+            text = "\n".join(paragraph.text for paragraph in document.paragraphs)
+            for table in document.tables:
+                text += "\n" + "\n".join(" | ".join(cell.text for cell in row.cells) for row in table.rows)
+    except HTTPException:
+        raise
+    except Exception:
+        raise HTTPException(status_code=422, detail="Could not read this document. Try another PDF or DOCX.")
+    text = re.sub(r"[ \t]+", " ", text)
+    text = re.sub(r"\n{3,}", "\n\n", text).strip()
+    if not text:
+        raise HTTPException(status_code=422, detail="No selectable text found. Scanned image-only PDFs are not supported yet.")
+
+    lines = [line.strip(" •\t-") for line in text.splitlines() if line.strip()]
+    section_patterns = {
+        "education": ("education", "academic"),
+        "experience": ("experience", "employment", "internship", "work history"),
+        "projects": ("projects", "project experience"),
+        "certifications": ("certifications", "certificates", "licenses"),
+        "technical": ("technical skills", "skills", "technologies", "programming"),
+        "achievements": ("achievements", "awards", "honors"),
+    }
+    suggestions = []
+    active = None
+    for line in lines:
+        normalized = line.lower().strip(" :")
+        heading = next((key for key, names in section_patterns.items()
+                        if normalized in names), None)
+        if heading:
+            active = heading
+            continue
+        if active and len(line) >= 3 and len(line) <= 240:
+            suggestions.append({
+                "section": active.title(),
+                "target": active,
+                "text": line[:240],
+                "origin": "explicit",
+            })
+        if len(suggestions) >= 80:
+            break
     return {
-        "status": "upload_required",
-        "message": "Resume analysis is not available yet. The frontend must upload the PDF or DOCX contents before analysis can run.",
+        "filename": file.filename,
+        "extractedCharacters": len(text),
+        "suggestions": suggestions,
+        "message": "These are text extracted under common resume headings. Review every item before adding it to your profile; no skill or qualification has been independently verified.",
     }
