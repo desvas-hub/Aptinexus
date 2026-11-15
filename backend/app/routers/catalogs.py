@@ -45,9 +45,54 @@ def resources(user: User = Depends(get_current_user)):
 
 @router.get("/assessments")
 def assessments(user: User = Depends(get_current_user)):
-    # Assessment answer keys are retained for frontend compatibility in this prototype.
-    # They must be moved fully server-side before public release.
-    return ASSESSMENTS
+    # Never send answer keys to the browser before submission.
+    return [
+        {
+            "id": item["id"],
+            "title": item["title"],
+            "skill": item["skill"],
+            "questions": [
+                {"q": question["q"], "options": question["options"]}
+                for question in item["questions"]
+            ],
+        }
+        for item in ASSESSMENTS
+    ]
+
+
+@router.post("/assessments/{assessment_id}/submit")
+def submit_assessment(
+    assessment_id: str,
+    payload: dict,
+    user: User = Depends(get_current_user),
+):
+    assessment = next((item for item in ASSESSMENTS if item["id"] == assessment_id), None)
+    if assessment is None:
+        raise HTTPException(status_code=404, detail="Assessment not found")
+    answers = payload.get("answers")
+    questions = assessment["questions"]
+    if not isinstance(answers, list) or len(answers) != len(questions):
+        raise HTTPException(status_code=422, detail="Submit one answer for every question")
+    if any(type(answer) is not int or answer < 0 or answer >= len(questions[index]["options"])
+           for index, answer in enumerate(answers)):
+        raise HTTPException(status_code=422, detail="One or more answers are invalid")
+    correct_answers = [question["answer"] for question in questions]
+    score = sum(answer == correct for answer, correct in zip(answers, correct_answers))
+    total = len(questions)
+    return {
+        "assessmentId": assessment_id,
+        "score": score,
+        "total": total,
+        "percentage": round(100 * score / total) if total else 0,
+        "correctAnswers": correct_answers,
+        "feedback": (
+            "Strong result. Add a project or demonstration to back it up."
+            if total and score / total >= 0.75 else
+            "Partial result. Revisit the topics you missed."
+            if total and score / total >= 0.5 else
+            "This skill needs more practice."
+        ),
+    }
 
 
 @router.get("/skillgraph")
