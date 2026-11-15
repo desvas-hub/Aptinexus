@@ -64,10 +64,15 @@ def evidenced_skill_names(db: Session, user: User) -> set[str]:
 
 
 def profile_completion(db: Session, user: User) -> int:
-    profile = read_user_value(db, user.id, "profile", {})
+    profile = read_user_value(
+        db,
+        user.id,
+        "profile",
+        {"personal": {"name": user.name, "headline": user.headline, "location": ""}, "sections": {}},
+    )
     if not isinstance(profile, dict):
         profile = {}
-    personal = profile.get("personal", {})
+    personal = profile.get("personal", {"name": user.name, "headline": user.headline, "location": ""})
     sections = profile.get("sections", {})
     if not isinstance(personal, dict):
         personal = {}
