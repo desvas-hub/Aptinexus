@@ -19,7 +19,8 @@ export default function ResumeAnalysisPage() {
   const [items, setItems] = useState<Item[] | null>(null)
   const [busy, setBusy] = useState(false)
   const [edit, setEdit] = useState<{ id: number; text: string } | null>(null)
-  const [msg, setMsg] = useState('')\n  const [analysisMessage, setAnalysisMessage] = useState('')
+  const [msg, setMsg] = useState('')
+  const [analysisMessage, setAnalysisMessage] = useState('')
 
   const pick = (f?: File) => { if (!f) return; const e = validateResume(f); setErr(e ?? ''); setFile(e ? null : f); setItems(null); setMsg(''); setAnalysisMessage('') }
   const run = async () => {
