@@ -14,7 +14,7 @@ export default function Dashboard() {
   if (!data) return <div className="glass h-64 animate-pulse" aria-busy="true" aria-label="Loading dashboard" />
   return (
     <div className="mx-auto max-w-6xl space-y-6">
-      <div><h1 className="text-2xl font-semibold text-[#1d1d1f]">Welcome back, {user?.name.split(' ')[0]}</h1><p className="text-sm text-[#6e6e73]">Sample data. Compatibility scores are estimates, not employment predictions.</p></div>
+      <div><h1 className="text-2xl font-semibold text-[#1d1d1f]">Welcome back, {user?.name.split(' ')[0]}</h1><p className="text-sm text-[#6e6e73]">Career matches use the skills in your saved profile. Compatibility scores are estimates, not employment predictions.</p></div>
       <div className="grid gap-4 lg:grid-cols-3">
         <section className="glass p-5"><h2 className="font-medium text-[#1d1d1f]">Profile completion</h2>
           <p className="mt-2 text-3xl text-[#1d1d1f]">{data.profileCompletion}%</p>
