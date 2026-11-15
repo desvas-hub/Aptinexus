@@ -1,15 +1,18 @@
 from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy.orm import Session
+
+from app.catalog_data import ASSESSMENTS, CAREERS, GRAPH_EDGES, GRAPH_NODES, RESOURCES, SKILLS
+from app.core.database import get_db
 from app.dependencies import get_current_user
 from app.models import User
-from app.catalog_data import CAREERS, SKILLS, RESOURCES, ASSESSMENTS, GRAPH_NODES, GRAPH_EDGES
+from app.services.intelligence import career_gaps, dashboard_data, simulate_career_matches
 
-router = APIRouter(tags=["Catalogs"])
+router = APIRouter(tags=["AptiNexus"])
 
 
 @router.get("/analytics/dashboard")
-def dashboard(user: User = Depends(get_current_user)):
-    # User-specific dashboard aggregation will be added in the next milestone.
-    return {"profileCompletion": 0, "skills": [], "careers": [], "progress": []}
+def dashboard(user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    return dashboard_data(db, user)
 
 
 @router.get("/careers")
@@ -18,9 +21,8 @@ def careers(user: User = Depends(get_current_user)):
 
 
 @router.get("/careers/matches")
-def career_matches(user: User = Depends(get_current_user)):
-    # Placeholder ranking until profile/evidence-based matching is implemented.
-    return []
+def career_matches(user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    return dashboard_data(db, user)["careers"]
 
 
 @router.get("/careers/{career_id}")
@@ -43,8 +45,8 @@ def resources(user: User = Depends(get_current_user)):
 
 @router.get("/assessments")
 def assessments(user: User = Depends(get_current_user)):
-    # This is demo assessment content. Answer keys are currently included because
-    # the frontend's existing assessment contract expects them; scoring moves server-side next.
+    # Assessment answer keys are retained for frontend compatibility in this prototype.
+    # They must be moved fully server-side before public release.
     return ASSESSMENTS
 
 
@@ -54,18 +56,26 @@ def skillgraph(user: User = Depends(get_current_user)):
 
 
 @router.get("/careers/{career_id}/gaps")
-def career_gaps(career_id: str, user: User = Depends(get_current_user)):
-    career = next((item for item in CAREERS if item["id"] == career_id), None)
-    if career is None:
+def gaps(career_id: str, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    result = career_gaps(db, user, career_id)
+    if result is None:
         raise HTTPException(status_code=404, detail="Career not found")
-    return {"careerId": career_id, "gaps": career["required"]}
+    return result
 
 
 @router.post("/what-if")
-def what_if(payload: dict, user: User = Depends(get_current_user)):
-    return []
+def what_if(payload: dict, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    extra_skills = payload.get("extraSkills", [])
+    if not isinstance(extra_skills, list):
+        raise HTTPException(status_code=422, detail="extraSkills must be a list")
+    return simulate_career_matches(db, user, extra_skills)
 
 
 @router.post("/resume/analyze")
 def resume_analyze(payload: dict, user: User = Depends(get_current_user)):
-    return {"status": "not_configured", "message": "Resume analysis service is not configured yet."}
+    # The current frontend sends only a file name, not resume contents. Do not
+    # pretend to analyse a document we have not received.
+    return {
+        "status": "upload_required",
+        "message": "Resume analysis is not available yet. The frontend must upload the PDF or DOCX contents before analysis can run.",
+    }
