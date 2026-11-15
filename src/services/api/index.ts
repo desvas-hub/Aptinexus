@@ -51,7 +51,18 @@ import { resumeSample } from '../mock/resume'
 import { estimate, estimateFor, userSkills } from '../../data/careers'
 import { analyse } from '../../data/skills'
 
-export const resumeApi = { analyse: (fileName: string) => request<typeof resumeSample>('/resume/analyze', post({ fileName }), () => wait(resumeSample, 900)) }
+export interface ResumeSuggestion { section: string; target: string | null; text: string; origin: 'explicit' | 'inferred' }
+export interface ResumeAnalysis { filename: string; extractedCharacters: number; suggestions: ResumeSuggestion[]; message: string }
+export const resumeApi = {
+  analyse: (file: File) => {
+    const body = new FormData()
+    body.append('file', file)
+    return request<ResumeAnalysis>('/resume/analyze', { method: 'POST', body }, async () => {
+      await wait(null, 900)
+      return { filename: file.name, extractedCharacters: 0, suggestions: resumeSample, message: 'Demo output only. The mock mode does not read the uploaded file.' }
+    })
+  },
+}
 export const matchingApi = { recommendations: () => request('/careers/matches', undefined, async () => careers.map(c => ({ id: c.id, estimate: estimate(c) })).sort((a, b) => b.estimate - a.estimate)) }
 export const gapsApi = { analyse: (careerId: string) => request(`/careers/${careerId}/gaps`, undefined, async () => { const c = careers.find(x => x.id === careerId); return c ? analyse(c) : null }) }
 export const whatIfApi = { simulate: (extraSkills: string[]) => request('/what-if', post({ extraSkills }), async () => careers.map(c => { const current = estimate(c); const hypothetical = estimateFor(c, [...userSkills, ...extraSkills]); return { id: c.id, current, hypothetical, change: hypothetical - current, stillNeeded: c.required.filter(s => !userSkills.includes(s) && !extraSkills.includes(s)) } })) }
