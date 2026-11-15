@@ -115,7 +115,7 @@ def dashboard_data(db: Session, user: User) -> dict:
             "id": name.lower().replace(" ", "-"),
             "name": name,
             "category": item["category"],
-            "level": 2 if status == "Demonstrated" else (1 if status == "Claimed" else 0),
+            "level": 2 if status == "Demonstrated" else 1,
             "status": status,
         })
     matches = sorted(
