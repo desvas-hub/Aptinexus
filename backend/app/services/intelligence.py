@@ -168,5 +168,6 @@ def simulate_career_matches(db: Session, user: User, extra_skills: list[str]) ->
             "current": before,
             "hypothetical": after,
             "change": after - before,
+            "stillNeeded": [name for name in career.get("required", []) if name not in hypothetical],
         })
     return sorted(projected, key=lambda item: (-item["hypothetical"], item["id"]))
