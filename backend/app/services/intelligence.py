@@ -3,7 +3,6 @@
 These are deterministic recommendations, not generative-AI output. They use only
 information the signed-in user has saved in their own AptiNexus account.
 """
-from collections import Counter
 from typing import Any
 
 from sqlalchemy import select
@@ -41,6 +40,22 @@ def user_skill_names(db: Session, user: User) -> set[str]:
     if isinstance(evidence, list):
         for item in evidence:
             if not isinstance(item, dict):
+                continue
+            skill = item.get("skill") or item.get("skillName") or item.get("name")
+            if isinstance(skill, str) and skill.strip():
+                names.add(skill.strip())
+    return names
+
+
+def evidenced_skill_names(db: Session, user: User) -> set[str]:
+    evidence = read_user_value(db, user.id, "evidence", [])
+    names: set[str] = set()
+    if isinstance(evidence, list):
+        for item in evidence:
+            if not isinstance(item, dict):
+                continue
+            status = str(item.get("status", "")).lower()
+            if status not in {"demonstrated", "verified"}:
                 continue
             skill = item.get("skill") or item.get("skillName") or item.get("name")
             if isinstance(skill, str) and skill.strip():
@@ -100,7 +115,7 @@ def dashboard_data(db: Session, user: User) -> dict:
             "id": name.lower().replace(" ", "-"),
             "name": name,
             "category": item["category"],
-            "level": 1 if status == "Demonstrated" else 0,
+            "level": 2 if status == "Demonstrated" else (1 if status == "Claimed" else 0),
             "status": status,
         })
     matches = sorted(
