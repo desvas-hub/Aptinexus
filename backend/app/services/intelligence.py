@@ -104,13 +104,13 @@ def career_match(career: dict, acquired: set[str]) -> dict:
 
 def dashboard_data(db: Session, user: User) -> dict:
     acquired = user_skill_names(db, user)
+    evidenced = evidenced_skill_names(db, user)
     skill_rows = []
     for item in SKILLS:
         name = item["name"]
-        if name in acquired:
-            status = "Demonstrated"
-        else:
-            status = "Not started"
+        if name not in acquired:
+            continue
+        status = "Demonstrated" if name in evidenced else "Claimed"
         skill_rows.append({
             "id": name.lower().replace(" ", "-"),
             "name": name,
@@ -134,7 +134,6 @@ def dashboard_data(db: Session, user: User) -> dict:
         ],
         "assessmentCount": completed,
     }
-
 
 def career_gaps(db: Session, user: User, career_id: str) -> dict:
     career = next((item for item in CAREERS if item["id"] == career_id), None)
