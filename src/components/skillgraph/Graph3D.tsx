@@ -2,7 +2,7 @@ import { useMemo, useRef } from 'react'
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import { Html, OrbitControls } from '@react-three/drei'
 import { type Group } from 'three'
-import { catMeta, type Cat, type GNode } from '../../data/graph'
+import { catMeta, type GNode } from '../../data/graph'
 
 export interface GraphProps { nodes: GNode[]; edges: [string, string][]; pos: Record<string, [number, number, number]>; visible: Set<string>; selected: string | null; matched: Set<string> | null; linked: Set<string>; onSelect: (id: string | null) => void; controls: React.MutableRefObject<any> }
 const size: Record<string, number> = { Claimed: 0.3, Practised: 0.36, Demonstrated: 0.44 } // bigger node = stronger SkillProof status
@@ -12,7 +12,7 @@ function Lines({ pos, visible, selected, edges }: Pick<GraphProps, 'pos' | 'visi
     const b: number[] = [], h: number[] = []
     edges.forEach(([a, c]) => { if (visible.has(a) && visible.has(c)) (a === selected || c === selected ? h : b).push(...pos[a], ...pos[c]) })
     return [new Float32Array(b), new Float32Array(h)]
-  }, [pos, visible, selected])
+  }, [pos, visible, selected, edges])
   const seg = (arr: Float32Array, color: string, opacity: number) => (
     <lineSegments key={arr.length}><bufferGeometry><bufferAttribute attach="attributes-position" count={arr.length / 3} array={arr} itemSize={3} /></bufferGeometry><lineBasicMaterial color={color} transparent opacity={opacity} depthWrite={false} /></lineSegments>)
   return <>{seg(base, '#8e8e93', 0.45)}{seg(hot, '#007AFF', 0.95)}</>
