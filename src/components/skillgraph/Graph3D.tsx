@@ -2,12 +2,12 @@ import { useMemo, useRef } from 'react'
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import { Html, OrbitControls } from '@react-three/drei'
 import { type Group } from 'three'
-import { catMeta, edges, nodes, type GNode } from '../../data/graph'
+import { catMeta, type Cat, type GNode } from '../../data/graph'
 
-export interface GraphProps { pos: Record<string, [number, number, number]>; visible: Set<string>; selected: string | null; matched: Set<string> | null; linked: Set<string>; onSelect: (id: string | null) => void; controls: React.MutableRefObject<any> }
+export interface GraphProps { nodes: GNode[]; edges: [string, string][]; pos: Record<string, [number, number, number]>; visible: Set<string>; selected: string | null; matched: Set<string> | null; linked: Set<string>; onSelect: (id: string | null) => void; controls: React.MutableRefObject<any> }
 const size: Record<string, number> = { Claimed: 0.3, Practised: 0.36, Demonstrated: 0.44 } // bigger node = stronger SkillProof status
 
-function Lines({ pos, visible, selected }: Pick<GraphProps, 'pos' | 'visible' | 'selected'>) {
+function Lines({ pos, visible, selected, edges }: Pick<GraphProps, 'pos' | 'visible' | 'selected' | 'edges'>) {
   const [base, hot] = useMemo(() => {
     const b: number[] = [], h: number[] = []
     edges.forEach(([a, c]) => { if (visible.has(a) && visible.has(c)) (a === selected || c === selected ? h : b).push(...pos[a], ...pos[c]) })
@@ -39,8 +39,8 @@ export default function Graph3D(p: GraphProps) {
       <fog attach="fog" args={['#f5f5f7', 16, 42]} />
       <ambientLight intensity={1.1} /><pointLight position={[10, 10, 10]} intensity={80} /><pointLight position={[-10, -6, -8]} intensity={30} color="#AF52DE" />
       
-      <Lines pos={p.pos} visible={p.visible} selected={p.selected} />
-      {nodes.filter(n => p.visible.has(n.id)).map(n => (
+      <Lines pos={p.pos} visible={p.visible} selected={p.selected} edges={p.edges} />
+      {p.nodes.filter(n => p.visible.has(n.id)).map(n => (
         <NodeMesh key={n.id} n={n} position={p.pos[n.id]} sel={n.id === p.selected} onSelect={p.onSelect}
           dim={!!((p.matched && !p.matched.has(n.id)) || (p.selected && n.id !== p.selected && !p.linked.has(n.id)))} />))}
       <OrbitControls ref={p.controls} enableDamping={false} minDistance={5} maxDistance={30} />
