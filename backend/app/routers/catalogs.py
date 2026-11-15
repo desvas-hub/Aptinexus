@@ -15,6 +15,11 @@ def careers(user: User = Depends(get_current_user)):
     return []
 
 
+@router.get("/careers/matches")
+def career_matches(user: User = Depends(get_current_user)):
+    return []
+
+
 @router.get("/careers/{career_id}")
 def career(career_id: str, user: User = Depends(get_current_user)):
     raise HTTPException(status_code=404, detail="Career catalog has not been loaded yet")
@@ -38,11 +43,6 @@ def assessments(user: User = Depends(get_current_user)):
 @router.get("/skillgraph")
 def skillgraph(user: User = Depends(get_current_user)):
     return {"nodes": [], "edges": []}
-
-
-@router.get("/careers/matches")
-def career_matches(user: User = Depends(get_current_user)):
-    return []
 
 
 @router.get("/careers/{career_id}/gaps")
