@@ -26,6 +26,7 @@ jobs:
     env:
       DATABASE_URL: sqlite:///./ci-test.db
       SECRET_KEY: ci-only-secret-key-not-for-production
+      PYTHONPATH: .
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
