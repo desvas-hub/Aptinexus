@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 import { analyticsApi } from '../../services/api'
 import { useAuth } from '../../contexts/AuthContext'
@@ -24,8 +25,16 @@ export default function Dashboard() {
             <Area dataKey="skills" name="Skills" stroke="#007AFF" fill="#007AFF" fillOpacity={0.2} /><Area dataKey="demonstrated" name="Demonstrated" stroke="#5AC8FA" fill="#5AC8FA" fillOpacity={0.15} /></AreaChart></ResponsiveContainer></div></section>
       </div>
       <div className="grid gap-4 lg:grid-cols-2">
-        <section className="glass p-5"><h2 className="mb-3 font-medium text-[#1d1d1f]">Skills</h2>
-          {data.skills.map(s => <div key={s.id} className="mb-3"><div className="flex justify-between text-sm"><span>{s.name}</span><span className="text-[#6e6e73]">{s.status}</span></div><div className="mt-1 h-1.5 rounded-full bg-black/[0.05]"><div className="h-1.5 rounded-full bg-nexus-cyan" style={{ width: `${s.level}%` }} /></div></div>)}</section>
+        <section className="glass p-5">
+          <h2 className="mb-3 font-medium text-[#1d1d1f]">Skills</h2>
+          {data.skills.length > 0 ? data.skills.map(s => <div key={s.id} className="mb-3"><div className="flex justify-between text-sm"><span>{s.name}</span><span className="text-[#6e6e73]">{s.status}</span></div><div className="mt-1 h-1.5 rounded-full bg-black/[0.05]"><div className="h-1.5 rounded-full bg-nexus-cyan" style={{ width: `${s.level}%` }} /></div></div>) : (
+            <div className="rounded-xl border border-dashed border-black/10 bg-white/50 px-4 py-6 text-center">
+              <p className="text-sm font-medium text-[#1d1d1f]">Your skill profile is just getting started</p>
+              <p className="mt-1 text-sm text-[#6e6e73]">Add skills to see your progress and build your SkillGraph.</p>
+              <Link to="/app/skills" className="btn-primary mt-4 inline-flex">Explore skills</Link>
+            </div>
+          )}
+        </section>
         <section className="glass p-5"><h2 className="mb-3 font-medium text-[#1d1d1f]">Career matches (estimated)</h2>
           {data.careers.map(c => <div key={c.id} className="mb-3 flex items-center justify-between rounded-xl border border-black/[0.08] p-3"><div><p className="text-[#1d1d1f]">{c.title}</p><p className="text-xs text-[#6e6e73]">Missing: {c.missing.join(', ')}</p></div><span className="text-[#007AFF]">~{c.compatibility}%</span></div>)}</section>
       </div>
