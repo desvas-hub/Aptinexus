@@ -66,7 +66,7 @@ export default function SkillGraphPage() {
       {error && <p role="alert" className="text-sm text-[#d70015]">{error}</p>}
       {!webgl && <p role="status" className="text-sm text-[#b25000]">3D rendering isn’t available in this browser, so you’re seeing the 2D view.</p>}
       <div className="grid gap-4 lg:grid-cols-[1fr_320px]">
-        <div className="glass graph-stage h-[60vh] min-h-[420px] overflow-hidden">{webgl && use3D ? <Graph3D {...props} controls={controls} /> : <Graph2D {...props} />}</div>
+        <div className="glass graph-stage h-[60vh] min-h-[420px] overflow-hidden">{graph.nodes.length === 0 ? <div className="flex h-full flex-col items-center justify-center px-6 text-center"><h2 className="text-lg font-medium text-[#1d1d1f]">Your SkillGraph is ready to grow</h2><p className="mt-2 max-w-md text-sm text-[#6e6e73]">Add skills to your profile to see them here, along with career paths connected to those skills. Projects, experience and certifications will appear only after you add them.</p></div> : webgl && use3D ? <Graph3D {...props} controls={controls} /> : <Graph2D {...props} />}</div>
         <aside className="glass p-5" aria-live="polite">
           {node ? <>
             <h2 className="text-lg font-semibold text-[#1d1d1f]">{node.label}</h2>
