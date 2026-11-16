@@ -39,7 +39,7 @@ export default function AuthPage({ mode }: { mode: 'login' | 'register' }) {
         {isReg && field('name', 'Full name')}{field('email', 'Email', 'email')}{field('password', 'Password', 'password')}
         {fail && <p role="alert" className="text-sm text-[#d70015]">{fail}</p>}
         <button className="btn-primary w-full" disabled={busy}>{busy ? 'Please wait…' : isReg ? 'Create account' : 'Log in'}</button>
-        <p className="text-center text-sm text-[#6e6e73]">Demo mode: any valid email and an 8+ character password works. Passwords are never stored.</p>
+        <p className="text-center text-sm text-[#6e6e73]">Your password is securely hashed on our server and is never stored in plain text.</p>
         <p className="text-center text-sm">{isReg ? <>Have an account? <Link className="text-[#007AFF]" to="/login">Log in</Link></> : <>New here? <Link className="text-[#007AFF]" to="/register">Create an account</Link></>}</p>
       </form>
     </div>
