@@ -1,11 +1,11 @@
 from fastapi import APIRouter, Depends, HTTPException, File, UploadFile
 from sqlalchemy.orm import Session
 
-from app.catalog_data import ASSESSMENTS, CAREERS, GRAPH_EDGES, GRAPH_NODES, RESOURCES, SKILLS
+from app.catalog_data import ASSESSMENTS, CAREERS, RESOURCES, SKILLS
 from app.core.database import get_db
 from app.dependencies import get_current_user
 from app.models import User
-from app.services.intelligence import career_gaps, dashboard_data, evidenced_skill_names, simulate_career_matches, user_skill_names
+from app.services.intelligence import career_gaps, dashboard_data, evidenced_skill_names, read_user_value, simulate_career_matches
 
 router = APIRouter(tags=["AptiNexus"])
 
@@ -97,17 +97,72 @@ def submit_assessment(
 
 @router.get("/skillgraph")
 def skillgraph(user: User = Depends(get_current_user), db: Session = Depends(get_db)):
-    acquired = user_skill_names(db, user)
+    """Build a graph from this user's saved skills, with related career paths.
+
+    Catalog skills are recommendations only when they are not in the profile;
+    they are deliberately not rendered as owned skills or achievements.
+    """
+    profile = read_user_value(db, user.id, "profile", {})
+    sections = profile.get("sections", {}) if isinstance(profile, dict) else {}
+    technical = sections.get("technical", []) if isinstance(sections, dict) else []
+    acquired = {
+        name.strip() for name in technical
+        if isinstance(name, str) and name.strip()
+    } if isinstance(technical, list) else set()
+    evidence = read_user_value(db, user.id, "evidence", [])
+    if isinstance(evidence, list):
+        for item in evidence:
+            if not isinstance(item, dict):
+                continue
+            name = item.get("skill") or item.get("skillName") or item.get("name")
+            if isinstance(name, str) and name.strip():
+                acquired.add(name.strip())
+
     demonstrated = evidenced_skill_names(db, user)
+    catalog_by_name = {item["name"].casefold(): item for item in SKILLS}
     nodes = []
-    for source in GRAPH_NODES:
-        item = dict(source)
-        if item.get("cat") == "skill":
-            item.pop("status", None)
-            if item["label"] in acquired:
-                item["status"] = "Demonstrated" if item["label"] in demonstrated else "Claimed"
-        nodes.append(item)
-    return {"nodes": nodes, "edges": GRAPH_EDGES}
+    skill_ids = {}
+    for name in sorted(acquired, key=str.casefold):
+        catalog = catalog_by_name.get(name.casefold(), {})
+        node_id = "skill-" + "-".join(name.casefold().split())
+        skill_ids[name.casefold()] = node_id
+        nodes.append({
+            "id": node_id,
+            "label": name,
+            "cat": "skill",
+            "status": "Demonstrated" if name in demonstrated else "Claimed",
+            "desc": catalog.get("desc", "A skill saved in your profile."),
+        })
+
+    edges = []
+    for name in acquired:
+        catalog = catalog_by_name.get(name.casefold(), {})
+        for related in catalog.get("related", []):
+            related_id = skill_ids.get(related.casefold())
+            source_id = skill_ids[name.casefold()]
+            if related_id and source_id != related_id:
+                edge = sorted([source_id, related_id])
+                if edge not in edges:
+                    edges.append(edge)
+
+    # Career nodes represent possible paths, not claims about the user's experience.
+    for career in CAREERS:
+        matched_ids = [
+            skill_ids[required.casefold()]
+            for required in career.get("required", [])
+            if required.casefold() in skill_ids
+        ]
+        if not matched_ids:
+            continue
+        nodes.append({
+            "id": "career-" + career["id"],
+            "label": career["title"],
+            "cat": "career",
+            "desc": "A possible career path connected to skills in your profile.",
+        })
+        edges.extend([[matched_id, "career-" + career["id"]] for matched_id in matched_ids])
+
+    return {"nodes": nodes, "edges": edges}
 
 
 @router.get("/careers/{career_id}/gaps")
