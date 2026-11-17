@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { careerDetail, type Career } from '../../data/careers'
+import type { Career } from '../../data/careers'
 import { careersApi } from '../../services/api'
 
 export default function ExploreCareersPage() {
@@ -29,7 +29,8 @@ export default function ExploreCareersPage() {
       {error && <p role="alert" className="text-sm text-[#d70015]">{error}</p>}
       {!loading && list.length === 0 && <p className="glass p-6">No careers match “{q}”.</p>}
       <div className="grid gap-4 md:grid-cols-2">{list.map(c => (
-        <Link key={c.id} to={`/app/careers/${c.id}`} className="glass block p-5 hover:bg-white/90"><p className="text-xs text-[#6e6e73]">{c.category}</p><h2 className="mt-1 font-medium text-[#1d1d1f]">{c.title}</h2><p className="mt-2 text-sm">{careerDetail[c.id]?.overview ?? c.why}</p></Link>))}</div>
+        <Link key={c.id} to={`/app/careers/${c.id}`} className="glass block p-5 hover:bg-white/90"><p className="text-xs text-[#6e6e73]">{c.category}</p><h2 className="mt-1 font-medium text-[#1d1d1f]">{c.title}</h2><p className="mt-2 text-sm">{c.why}</p></Link>))}</div>
     </div>
   )
 }
+
