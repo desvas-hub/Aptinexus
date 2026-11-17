@@ -3,10 +3,14 @@ import { Link } from 'react-router-dom'
 import { ChevronDown } from 'lucide-react'
 import { careersApi, matchingApi } from '../../services/api'
 import type { Career } from '../../data/careers'
+import { useAuth } from '../../contexts/AuthContext'
+import { loadProfile } from '../../data/profile'
+import { profilesApi } from '../../services/api'
 
 interface Match { id: string; title: string; category: string; compatibility: number; matched: string[]; missing: string[] }
 
 export default function CareerDiscovery() {
+  const { user } = useAuth()
   const [careers, setCareers] = useState<Career[]>([])
   const [matches, setMatches] = useState<Match[]>([])
   const [cat, setCat] = useState('All')
@@ -16,7 +20,10 @@ export default function CareerDiscovery() {
 
   useEffect(() => {
     let active = true
-    Promise.all([careersApi.list(), matchingApi.recommendations()])
+    if (!user) return
+    profilesApi.get(user.id, loadProfile(user)).then(profile => Promise.all([
+      careersApi.list(), matchingApi.recommendations(profile.sections?.technical ?? []),
+    ]))
       .then(([catalog, result]) => {
         if (!active) return
         setCareers(catalog as Career[])
@@ -25,7 +32,7 @@ export default function CareerDiscovery() {
       .catch(e => { if (active) setError(e instanceof Error ? e.message : 'Could not load career recommendations.') })
       .finally(() => { if (active) setLoading(false) })
     return () => { active = false }
-  }, [])
+  }, [user])
 
   const cats = ['All', ...Array.from(new Set(careers.map(c => c.category)))]
   const byId = useMemo(() => new Map(matches.map(m => [m.id, m])), [matches])
@@ -35,7 +42,7 @@ export default function CareerDiscovery() {
   return (
     <div className="mx-auto max-w-5xl space-y-5">
       <div><h1 className="text-2xl font-semibold text-[#1d1d1f]">Career Discovery</h1>
-        <p className="text-sm text-[#6e6e73]">Compatibility estimates are calculated from skills in your saved profile and submitted evidence. They are not predictions of employment.</p></div>
+        <p className="text-sm text-[#6e6e73]">Matches compare the skills in your profile with each career’s listed requirements.</p></div>
       <div className="flex flex-wrap gap-2" role="group" aria-label="Filter by category">{cats.map(c => <button key={c} aria-pressed={cat === c} onClick={() => setCat(c)} className={`btn-ghost !py-1.5 ${cat === c ? 'bg-[#007AFF]/10 text-[#007AFF]' : ''}`}>{c}</button>)}</div>
       {loading && <p className="glass p-5 text-sm text-[#6e6e73]">Calculating your career matches…</p>}
       {error && <p role="alert" className="text-sm text-[#d70015]">{error}</p>}
@@ -45,12 +52,12 @@ export default function CareerDiscovery() {
           const match = byId.get(c.id)
           const have = match?.matched ?? []
           const miss = match?.missing ?? c.required
-          const compatibility = match?.compatibility ?? 0
+          const compatibility = match?.compatibility
           const isOpen = open === c.id
           return (
             <article key={c.id} className="glass p-5">
               <div className="flex items-start justify-between gap-3"><div><h2 className="font-medium text-[#1d1d1f]">{c.title}</h2><p className="text-xs text-[#6e6e73]">{c.category}</p></div>
-                <div className="ring-meter" style={{ '--p': compatibility, '--c': compatibility >= 70 ? '#34C759' : compatibility >= 50 ? '#007AFF' : '#FF9F0A' } as React.CSSProperties} title="Estimated compatibility" aria-label={`Estimated compatibility ${compatibility} percent`}>~{compatibility}%</div></div>
+                {compatibility === undefined ? <span className="text-xs text-[#6e6e73]">Match unavailable</span> : <div className="ring-meter" style={{ '--p': compatibility, '--c': compatibility >= 70 ? '#34C759' : compatibility >= 50 ? '#007AFF' : '#FF9F0A' } as React.CSSProperties} title="Profile match" aria-label={`Profile match ${compatibility} percent`}>{compatibility}%</div>}</div>
               <p className="mt-3 text-xs text-[#6e6e73]">Matching skills</p><p className="text-sm text-[#1d1d1f]">{have.join(', ') || 'None yet'}</p>
               <p className="mt-2 text-xs text-[#6e6e73]">Missing skills</p><p className="text-sm text-[#b25000]">{miss.join(', ') || 'None'}</p>
               <button className="btn-ghost mt-4 !py-1.5" aria-expanded={isOpen} onClick={() => setOpen(isOpen ? null : c.id)}>{isOpen ? 'Hide details' : 'Why this career'}<ChevronDown size={14} className={isOpen ? 'rotate-180' : ''} /></button>
@@ -62,3 +69,4 @@ export default function CareerDiscovery() {
     </div>
   )
 }
+
