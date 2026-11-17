@@ -9,9 +9,9 @@ export default function AboutPage() {
       <h2 className="mt-8 text-xl font-medium text-[#1d1d1f]">Our approach</h2>
       <p className="mt-2">Everything is built around a skill graph: a map of how abilities relate to each other, to evidence such as projects, and to careers. From that map we estimate fit, find gaps and build learning roadmaps.</p>
       <h2 className="mt-8 text-xl font-medium text-[#1d1d1f]">What AptiNexus is not</h2>
-      <p className="mt-2">It is not a resume builder, a job board, a chatbot, a personality test or a course platform. Compatibility scores are estimates, and a skill is only called Verified after independent review, never automatically.</p>
-      <p className="glass mt-8 p-4 text-sm">This is a demo build. Data and AI-style output are simulated until a backend is connected.</p>
+      <p className="mt-2">It is not a resume builder, a job board, a chatbot, a personality test or a course platform. Skill verification requires independent review.</p>
       <Link to="/register" className="btn-primary mt-8">Create your account</Link>
     </article>
   )
 }
+

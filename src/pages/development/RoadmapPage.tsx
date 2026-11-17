@@ -3,8 +3,9 @@ import { useSearchParams } from 'react-router-dom'
 import { ChevronDown } from 'lucide-react'
 import CareerPicker from '../../components/careers/CareerPicker'
 import { careers } from '../../data/careers'
-import { byName, priorityOf, statusOf } from '../../data/skills'
-import { gapsApi } from '../../services/api'
+import { byName, priorityOf } from '../../data/skills'
+import { gapsApi, profilesApi } from '../../services/api'
+import { loadProfile } from '../../data/profile'
 import { useRemote } from '../../hooks/useRemote'
 import { useAuth } from '../../contexts/AuthContext'
 
@@ -22,7 +23,8 @@ export default function RoadmapPage() {
   useEffect(() => {
     let active = true
     setLoading(true); setError('')
-    gapsApi.analyse(career.id).then(result => { if (active) setMissing((result as { missing: string[] }).missing ?? []) })
+    if (!user) return () => { active = false }
+    profilesApi.get(user.id, loadProfile(user)).then(profile => gapsApi.analyse(career.id, profile.sections?.technical ?? [])).then(result => { if (active) setMissing((result as { missing: string[] }).missing ?? []) })
       .catch(e => { if (active) setError(e instanceof Error ? e.message : 'Could not load your roadmap.') })
       .finally(() => { if (active) setLoading(false) })
     return () => { active = false }
@@ -31,7 +33,8 @@ export default function RoadmapPage() {
 
   // Order: by priority, with any missing prerequisite placed before the skill that needs it.
   const stages: string[] = []
-  const place = (s: string) => { if (stages.includes(s)) return; (byName(s)?.prereqs ?? []).filter(p => statusOf(p) === 'Not started').forEach(place); stages.push(s) }
+  const missingSet = new Set(missing.map(skill => skill.toLocaleLowerCase()))
+  const place = (s: string) => { if (stages.includes(s)) return; (byName(s)?.prereqs ?? []).filter(p => missingSet.has(p.toLocaleLowerCase())).forEach(place); stages.push(s) }
   missing.sort((a, b) => career.required.indexOf(a) - career.required.indexOf(b)).forEach(place)
   const all = stages.flatMap(s => tasks(s).map((_, i) => `${s}:${i}`))
   const pct = all.length ? Math.round((all.filter(t => done.includes(t)).length / all.length) * 100) : 100
@@ -57,3 +60,4 @@ export default function RoadmapPage() {
     </div>
   )
 }
+

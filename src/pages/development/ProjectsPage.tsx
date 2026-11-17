@@ -3,7 +3,7 @@ import { useState } from 'react'
 import { Pencil, Plus, Trash2 } from 'lucide-react'
 import { useAuth } from '../../contexts/AuthContext'
 import { library } from '../../data/skills'
-import { seedProjects, statusFor, type Evidence, type Project, type Result } from '../../data/evidence'
+import { statusFor, type Evidence, type Project, type Result } from '../../data/evidence'
 import { isHttpUrl } from '../../utils/store'
 import { useRemote } from '../../hooks/useRemote'
 
@@ -11,7 +11,7 @@ const blank: Project = { id: '', title: '', desc: '', tech: [], skills: [], link
 export default function ProjectsPage() {
   const uid = useAuth().user?.id
   const toast = useToast()
-  const [projects, setProjects] = useRemote<Project[]>('projects', uid, seedProjects)
+  const [projects, setProjects] = useRemote<Project[]>('projects', uid, [])
   const [ev] = useRemote<Evidence[]>('evidence', uid, [])
   const [res] = useRemote<Result[]>('results', uid, [])
   const [form, setForm] = useState<Project | null>(null)
@@ -60,3 +60,4 @@ export default function ProjectsPage() {
     </div>
   )
 }
+

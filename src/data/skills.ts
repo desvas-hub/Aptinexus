@@ -1,4 +1,4 @@
-import { userSkills, type Career } from './careers'
+import type { Career } from './careers'
 export type Difficulty = 'Beginner' | 'Intermediate' | 'Advanced'
 export type Priority = 'Essential' | 'Recommended' | 'Specialization-specific' | 'Optional'
 export interface LibSkill { name: string; category: string; difficulty: Difficulty; desc: string; prereqs: string[]; related: string[] }
@@ -26,14 +26,13 @@ const rows: T[] = [
 ]
 export const library: LibSkill[] = rows.map(([name, category, difficulty, desc, prereqs, related]) => ({ name, category, difficulty, desc, prereqs, related }))
 export const byName = (n: string) => library.find(s => s.name === n)
-// Demo statuses. Nothing is Verified: that needs real evidence checks.
-const statusMap: Record<string, string> = { Python: 'Practised', 'CAD Design': 'Demonstrated', 'Embedded C': 'Practised', 'Control Systems': 'Claimed', 'Circuit Design': 'Practised', Mechanics: 'Claimed', 'Engineering Mathematics': 'Claimed' }
-export const statusOf = (n: string) => statusMap[n] ?? 'Not started'
-// Demo rule: the first 3 required skills are Essential, the next 2 Recommended, the rest Specialization-specific.
+// Required-skill ordering in the career catalog defines these learning priorities.
 export const priorityOf = (c: Career, s: string): Priority => { const i = c.required.indexOf(s); return i < 3 ? 'Essential' : i < 5 ? 'Recommended' : 'Specialization-specific' }
-export function analyse(c: Career) {
-  const strengths = c.required.filter(s => userSkills.includes(s))
-  const missing = c.required.filter(s => !userSkills.includes(s))
-  const optional = library.filter(l => !c.required.includes(l.name) && !userSkills.includes(l.name) && l.related.some(r => c.required.includes(r))).slice(0, 2).map(l => l.name)
+export function analyse(c: Career, have: string[] = []) {
+  const skills = new Set(have.map(skill => skill.trim().toLocaleLowerCase()))
+  const strengths = c.required.filter(s => skills.has(s.toLocaleLowerCase()))
+  const missing = c.required.filter(s => !skills.has(s.toLocaleLowerCase()))
+  const optional = library.filter(l => !c.required.includes(l.name) && !skills.has(l.name.toLocaleLowerCase()) && l.related.some(r => c.required.includes(r))).slice(0, 2).map(l => l.name)
   return { strengths, missing, optional }
 }
+

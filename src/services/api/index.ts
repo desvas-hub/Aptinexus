@@ -1,14 +1,14 @@
 import { request } from './client'
-import { delay, mockDashboard, mockUser } from '../mock/data'
+import { delay, mockDashboard } from '../mock/data'
 import type { DashboardData, User } from '../../types'
 
 const post = (body: unknown): RequestInit => ({ method: 'POST', body: JSON.stringify(body) })
 
 export const authApi = {
   login: (email: string, password: string) =>
-    request<{ user: User; token: string }>('/auth/login', post({ email, password }), () => delay({ user: { ...mockUser, email }, token: 'demo-token' })),
+    request<{ user: User; token: string }>('/auth/login', post({ email, password }), async () => { throw new Error('Sign-in service is unavailable.') }),
   register: (name: string, email: string, password: string) =>
-    request<{ user: User; token: string }>('/auth/register', post({ name, email, password }), () => delay({ user: { ...mockUser, name, email }, token: 'demo-token' })),
+    request<{ user: User; token: string }>('/auth/register', post({ name, email, password }), async () => { throw new Error('Account creation service is unavailable.') }),
 }
 export const analyticsApi = {
   dashboard: () => request<DashboardData>('/analytics/dashboard', undefined, () => delay(mockDashboard, 600)),
@@ -20,7 +20,6 @@ import { careers } from '../../data/careers'
 import { library } from '../../data/skills'
 import { resources } from '../../data/resources'
 import { assessments, type Assessment } from '../../data/assessments'
-import { edges, nodes } from '../../data/graph'
 import type { ProfileData } from '../../data/profile'
 
 export const profilesApi = { get: (uid: string, init: ProfileData) => userData.get('profile', uid, init), save: (uid: string, p: ProfileData) => userData.save('profile', uid, p) }
@@ -43,12 +42,11 @@ export const assessmentsApi = {
     return { assessmentId: id, score, total, percentage: total ? Math.round(100 * score / total) : 0, correctAnswers, feedback: total && score / total >= 0.75 ? 'Strong result. Add a project or demonstration to back it up.' : total && score / total >= 0.5 ? 'Partial result. Revisit the topics you missed.' : 'This skill needs more practice.' }
   }),
 }
-export const skillGraphApi = { get: () => request('/skillgraph', undefined, async () => ({ nodes, edges })) }
+export const skillGraphApi = { get: () => request('/skillgraph', undefined, async () => ({ nodes: [], edges: [] })) }
 
 // ---- Intelligence endpoints (mock: simple demo rules, not AI) ----
 import { delay as wait } from '../mock/data'
-import { resumeSample } from '../mock/resume'
-import { estimate, estimateFor, userSkills } from '../../data/careers'
+import { estimateFor } from '../../data/careers'
 import { analyse } from '../../data/skills'
 
 export interface ResumeSuggestion { section: string; target: string | null; text: string; origin: 'explicit' | 'inferred' }
@@ -57,12 +55,10 @@ export const resumeApi = {
   analyse: (file: File) => {
     const body = new FormData()
     body.append('file', file)
-    return request<ResumeAnalysis>('/resume/analyze', { method: 'POST', body }, async () => {
-      await wait(null, 900)
-      return { filename: file.name, extractedCharacters: 0, suggestions: resumeSample.map(s => ({ ...s, origin: s.origin as ResumeSuggestion['origin'] })), message: 'Demo output only. The mock mode does not read the uploaded file.' }
-    })
+    return request<ResumeAnalysis>('/resume/analyze', { method: 'POST', body }, async () => { throw new Error('Resume analysis is unavailable.') })
   },
 }
-export const matchingApi = { recommendations: () => request('/careers/matches', undefined, async () => careers.map(c => { const matched = c.required.filter(s => userSkills.includes(s)); return { id: c.id, title: c.title, category: c.category, compatibility: Math.round(100 * matched.length / c.required.length), matched, missing: c.required.filter(s => !userSkills.includes(s)) } }).sort((a, b) => b.compatibility - a.compatibility)) }
-export const gapsApi = { analyse: (careerId: string) => request(`/careers/${careerId}/gaps`, undefined, async () => { const c = careers.find(x => x.id === careerId); return c ? analyse(c) : null }) }
-export const whatIfApi = { simulate: (extraSkills: string[]) => request('/what-if', post({ extraSkills }), async () => careers.map(c => { const current = estimate(c); const hypothetical = estimateFor(c, [...userSkills, ...extraSkills]); return { id: c.id, current, hypothetical, change: hypothetical - current, stillNeeded: c.required.filter(s => !userSkills.includes(s) && !extraSkills.includes(s)) } })) }
+export const matchingApi = { recommendations: (have: string[] = []) => request('/careers/matches', undefined, async () => careers.map(c => { const match = analyse(c, have); return { id: c.id, title: c.title, category: c.category, compatibility: estimateFor(c, have), matched: match.strengths, missing: match.missing } }).sort((a, b) => b.compatibility - a.compatibility)) }
+export const gapsApi = { analyse: (careerId: string, have: string[] = []) => request(`/careers/${careerId}/gaps`, undefined, async () => { const c = careers.find(x => x.id === careerId); return c ? analyse(c, have) : null }) }
+export const whatIfApi = { simulate: (extraSkills: string[], have: string[] = []) => request('/what-if', post({ extraSkills }), async () => careers.map(c => { const current = estimateFor(c, have); const hypothetical = estimateFor(c, [...have, ...extraSkills]); return { id: c.id, current, hypothetical, change: hypothetical - current, stillNeeded: c.required.filter(s => !have.some(h => h.toLocaleLowerCase() === s.toLocaleLowerCase()) && !extraSkills.some(h => h.toLocaleLowerCase() === s.toLocaleLowerCase())) } })) }
+

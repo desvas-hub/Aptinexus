@@ -17,7 +17,7 @@ export default function ProfilePage() {
   return (
     <div className="mx-auto max-w-5xl space-y-5">
       <div className="flex flex-wrap items-end justify-between gap-3"><div><h1 className="text-2xl font-semibold text-[#1d1d1f]">My Profile</h1>
-        <p className="text-sm text-[#6e6e73]">Changes save automatically in this browser (demo storage). {saved && <span className="text-[#007AFF]">Saved.</span>}</p></div>
+        <p className="text-sm text-[#6e6e73]">Changes save automatically. {saved && <span className="text-[#007AFF]">Saved.</span>}</p></div>
         <Link to="/app/resume" className="btn-primary">Upload a resume</Link></div>
       <div className="glass p-5"><div className="flex justify-between text-sm"><span className="text-[#1d1d1f]">Profile completion</span><span>{pct}%</span></div>
         <div className="mt-2 h-2 rounded-full bg-black/[0.05]" role="progressbar" aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100}><div className="h-2 rounded-full bg-gradient-to-r from-nexus-blue to-nexus-violet" style={{ width: `${pct}%` }} /></div></div>
@@ -28,3 +28,4 @@ export default function ProfilePage() {
     </div>
   )
 }
+
