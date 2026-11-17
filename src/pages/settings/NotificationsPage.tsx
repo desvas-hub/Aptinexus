@@ -18,7 +18,7 @@ export default function NotificationsPage() {
   const list = items.filter(i => type === 'All' || i.type === type)
   return (
     <div className="mx-auto max-w-2xl space-y-5">
-      <div className="flex items-end justify-between"><div><h1 className="text-2xl font-semibold text-[#1d1d1f]">Notifications</h1><p className="text-sm text-[#6e6e73]">Sample notifications for the demo.</p></div>
+      <div className="flex items-end justify-between"><div><h1 className="text-2xl font-semibold text-[#1d1d1f]">Notifications</h1></div>
         <button className="btn-ghost" onClick={() => setRead(items.map(i => i.id))}>Mark all as read</button></div>
       <select className="input !w-auto" aria-label="Filter by type" value={type} onChange={e => setType(e.target.value)}>{types.map(t => <option key={t}>{t}</option>)}</select>
       {list.length === 0 && <p className="glass p-6">No notifications of this type.</p>}
