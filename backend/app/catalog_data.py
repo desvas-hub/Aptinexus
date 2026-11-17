@@ -4,13 +4,13 @@ These are seed/catalog records, not user-verified credentials or AI-generated re
 """
 
 CAREERS = [
-    {"id": "robotics", "title": "Robotics Engineer", "category": "Robotics", "required": ["Python", "ROS", "Control Systems", "Embedded C", "CAD Design", "Computer Vision"], "why": "Your mechanical design, control and firmware work spans the full robot stack.", "learn": ["ROS 2 fundamentals", "OpenCV basics"]},
-    {"id": "mechatronics", "title": "Mechatronics Engineer", "category": "Engineering", "required": ["Embedded C", "Control Systems", "CAD Design", "Circuit Design", "PLC Programming"], "why": "This role blends the mechanical, electronic and software skills you already use.", "learn": ["PLC programming basics"]},
-    {"id": "auto", "title": "Automotive Software Engineer", "category": "Software", "required": ["Embedded C", "Python", "AUTOSAR", "CAN Bus", "Control Systems"], "why": "Embedded C plus control theory transfers well to vehicle software.", "learn": ["CAN bus protocol", "AUTOSAR architecture"]},
-    {"id": "sim", "title": "Simulation Engineer", "category": "Engineering", "required": ["Python", "Mechanics", "FEA", "MATLAB", "CAD Design", "Engineering Mathematics"], "why": "Mechanics, maths and scripting let you build models of physical systems.", "learn": ["Finite element analysis", "MATLAB / Simulink"]},
-    {"id": "auto-eng", "title": "Industrial Automation Engineer", "category": "Engineering", "required": ["PLC Programming", "Control Systems", "Circuit Design", "SCADA", "Embedded C"], "why": "Control systems and circuits are the base of factory automation.", "learn": ["PLC programming", "SCADA basics"]},
-    {"id": "airobot", "title": "AI and Robotics Researcher", "category": "Research", "required": ["Python", "Machine Learning", "ROS", "Control Systems", "Engineering Mathematics"], "why": "A cross-domain option: your maths, Python and control background support research in learning-based robotics.", "learn": ["Machine learning foundations", "Reinforcement learning"]},
-    {"id": "tpm", "title": "Technical Product Manager", "category": "Product", "required": ["Roadmapping", "Analytics", "Communication", "Mechanics", "Python"], "why": "Hands-on technical depth helps you lead hardware and software teams.", "learn": ["Product roadmapping", "Product analytics"]},
+    {"id": "robotics", "title": "Robotics Engineer", "category": "Robotics", "required": ["Python", "ROS", "Control Systems", "Embedded C", "CAD Design", "Computer Vision"], "why": "This role combines mechanical design, control, and firmware across the robot stack.", "learn": ["ROS 2 fundamentals", "OpenCV basics"]},
+    {"id": "mechatronics", "title": "Mechatronics Engineer", "category": "Engineering", "required": ["Embedded C", "Control Systems", "CAD Design", "Circuit Design", "PLC Programming"], "why": "This role blends mechanical, electronic, and software disciplines.", "learn": ["PLC programming basics"]},
+    {"id": "auto", "title": "Automotive Software Engineer", "category": "Software", "required": ["Embedded C", "Python", "AUTOSAR", "CAN Bus", "Control Systems"], "why": "Automotive software combines embedded programming, vehicle networks, and control systems.", "learn": ["CAN bus protocol", "AUTOSAR architecture"]},
+    {"id": "sim", "title": "Simulation Engineer", "category": "Engineering", "required": ["Python", "Mechanics", "FEA", "MATLAB", "CAD Design", "Engineering Mathematics"], "why": "Simulation engineers build computational models of physical systems.", "learn": ["Finite element analysis", "MATLAB / Simulink"]},
+    {"id": "auto-eng", "title": "Industrial Automation Engineer", "category": "Engineering", "required": ["PLC Programming", "Control Systems", "Circuit Design", "SCADA", "Embedded C"], "why": "Industrial automation combines control systems, instrumentation, and factory software.", "learn": ["PLC programming", "SCADA basics"]},
+    {"id": "airobot", "title": "AI and Robotics Researcher", "category": "Research", "required": ["Python", "Machine Learning", "ROS", "Control Systems", "Engineering Mathematics"], "why": "This research area combines machine learning with robotics, control, and mathematics.", "learn": ["Machine learning foundations", "Reinforcement learning"]},
+    {"id": "tpm", "title": "Technical Product Manager", "category": "Product", "required": ["Roadmapping", "Analytics", "Communication", "Mechanics", "Python"], "why": "Technical product managers guide product direction across engineering and customer needs.", "learn": ["Product roadmapping", "Product analytics"]},
 ]
 
 SKILLS = [
@@ -37,24 +37,8 @@ SKILLS = [
 
 RESOURCES = [
     {"title": "Official Python tutorial", "type": "Documentation", "skill": "Python", "level": "Beginner", "url": "https://docs.python.org/3/tutorial/"},
-    {"title": "Python practice exercises", "type": "Practical project", "skill": "Python", "level": "Beginner"},
     {"title": "ROS documentation", "type": "Documentation", "skill": "ROS", "level": "Intermediate", "url": "https://docs.ros.org"},
-    {"title": "Beginner ROS 2 course", "type": "Course", "skill": "ROS", "level": "Intermediate"},
-    {"title": "Build a simulated robot in ROS", "type": "Practical project", "skill": "ROS", "level": "Intermediate"},
     {"title": "OpenCV documentation", "type": "Documentation", "skill": "Computer Vision", "level": "Intermediate", "url": "https://docs.opencv.org"},
-    {"title": "Introductory computer vision video series", "type": "Video", "skill": "Computer Vision", "level": "Intermediate"},
-    {"title": "Control systems textbook", "type": "Book", "skill": "Control Systems", "level": "Advanced"},
-    {"title": "PID tuning tutorial", "type": "Tutorial", "skill": "Control Systems", "level": "Intermediate"},
-    {"title": "Embedded C programming book", "type": "Book", "skill": "Embedded C", "level": "Intermediate"},
-    {"title": "Blink an LED on a microcontroller", "type": "Tutorial", "skill": "Embedded C", "level": "Beginner"},
-    {"title": "PLC basics course", "type": "Course", "skill": "PLC Programming", "level": "Intermediate"},
-    {"title": "Ladder logic tutorial", "type": "Tutorial", "skill": "PLC Programming", "level": "Beginner"},
-    {"title": "Finite element analysis course", "type": "Course", "skill": "FEA", "level": "Advanced"},
-    {"title": "MATLAB beginner tutorial", "type": "Tutorial", "skill": "MATLAB", "level": "Beginner"},
-    {"title": "Machine learning foundations course", "type": "Course", "skill": "Machine Learning", "level": "Advanced"},
-    {"title": "Train a small classifier", "type": "Practical project", "skill": "Machine Learning", "level": "Intermediate"},
-    {"title": "Product roadmapping book", "type": "Book", "skill": "Roadmapping", "level": "Beginner"},
-    {"title": "CAN bus explainer video", "type": "Video", "skill": "CAN Bus", "level": "Intermediate"},
 ]
 
 ASSESSMENTS = [
@@ -78,32 +62,3 @@ ASSESSMENTS = [
     ]},
 ]
 
-GRAPH_NODES = [
-    {"id": "python", "label": "Python", "cat": "skill", "status": "Practised", "desc": "General-purpose language used for automation, data and robotics."},
-    {"id": "cad", "label": "CAD Design", "cat": "skill", "status": "Demonstrated", "desc": "Modelling mechanical parts and assemblies."},
-    {"id": "embc", "label": "Embedded C", "cat": "skill", "status": "Practised", "desc": "Firmware programming for microcontrollers."},
-    {"id": "control", "label": "Control Systems", "cat": "skill", "status": "Claimed", "desc": "Feedback loops and stability of dynamic systems."},
-    {"id": "ros", "label": "ROS", "cat": "skill", "status": "Claimed", "desc": "Robot Operating System middleware for robot software."},
-    {"id": "cv", "label": "Computer Vision", "cat": "skill", "status": "Claimed", "desc": "Extracting information from images and video."},
-    {"id": "mech", "label": "Engineering Mechanics", "cat": "subject", "desc": "Statics and dynamics from your degree."},
-    {"id": "math", "label": "Engineering Mathematics", "cat": "subject", "desc": "Calculus, linear algebra and differential equations."},
-    {"id": "circuits", "label": "Circuit Theory", "cat": "subject", "desc": "Analysis of electrical circuits."},
-    {"id": "rover", "label": "Line-following Rover", "cat": "project", "desc": "Arduino rover with PID steering."},
-    {"id": "arm", "label": "3-DOF Robotic Arm", "cat": "project", "desc": "Designed, printed and programmed a small arm."},
-    {"id": "intern", "label": "Manufacturing Internship", "cat": "experience", "desc": "Six weeks on a CNC and assembly line."},
-    {"id": "pycert", "label": "Python Course Certificate", "cat": "certification", "desc": "Self-reported completion certificate. Not independently verified."},
-    {"id": "robotics", "label": "Robotics Engineer", "cat": "career", "desc": "Designs and programs robots."},
-    {"id": "mechatronics", "label": "Mechatronics Engineer", "cat": "career", "desc": "Integrates mechanics, electronics and software."},
-    {"id": "sim", "label": "Simulation Engineer", "cat": "career", "desc": "Builds models to predict system behaviour."},
-    {"id": "tpm", "label": "Technical Product Manager", "cat": "career", "desc": "Guides technical products from idea to launch."},
-]
-
-GRAPH_EDGES = [
-    ["python", "cv"], ["python", "ros"], ["embc", "control"], ["cad", "mech"],
-    ["control", "math"], ["circuits", "embc"], ["rover", "embc"], ["rover", "control"],
-    ["arm", "cad"], ["arm", "python"], ["arm", "ros"], ["intern", "cad"],
-    ["pycert", "python"], ["robotics", "ros"], ["robotics", "python"],
-    ["robotics", "control"], ["robotics", "cv"], ["mechatronics", "embc"],
-    ["mechatronics", "control"], ["mechatronics", "cad"], ["sim", "python"],
-    ["sim", "math"], ["tpm", "intern"], ["ros", "control"],
-]
