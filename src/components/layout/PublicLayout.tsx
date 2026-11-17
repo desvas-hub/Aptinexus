@@ -17,7 +17,8 @@ export default function PublicLayout() {
         </nav>
       </header>
       <Outlet />
-      <footer className="mt-24 space-y-2 border-t border-black/[0.08] py-8 text-center text-sm text-[#6e6e73]"><div className="flex justify-center gap-5"><Link to="/about">About</Link><Link to="/features">Features</Link><Link to="/careers">Careers</Link></div><p>© 2026 AptiNexus. Demo build: all data and AI output shown is simulated.</p></footer>
+      <footer className="mt-24 space-y-2 border-t border-black/[0.08] py-8 text-center text-sm text-[#6e6e73]"><div className="flex justify-center gap-5"><Link to="/about">About</Link><Link to="/features">Features</Link><Link to="/careers">Careers</Link></div><p>© 2026 AptiNexus.</p></footer>
     </div>
   )
 }
+
