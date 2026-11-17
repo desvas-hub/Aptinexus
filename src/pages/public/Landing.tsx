@@ -2,10 +2,10 @@ import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { GitBranch, Route, Sparkles, Target } from 'lucide-react'
 
-const nodes = [[50, 50, 9, 'You'], [20, 25, 6, 'Python'], [78, 22, 6, 'CAD'], [85, 62, 6, 'Robotics'], [55, 85, 6, 'Embedded C'], [18, 70, 6, 'Control']] as const
+const nodes = [[50, 50, 9, 'Profile'], [20, 25, 6, 'Skill'], [78, 22, 6, 'Project'], [85, 62, 6, 'Career'], [55, 85, 6, 'Evidence'], [18, 70, 6, 'Learning']] as const
 const features = [
   { icon: GitBranch, title: 'SkillGraph', text: 'See how your subjects, skills and projects connect to each other and to careers.' },
-  { icon: Target, title: 'Career discovery', text: 'Find careers across domains you had not considered, with estimated compatibility.' },
+  { icon: Target, title: 'Career discovery', text: 'Compare your profile skills with career requirements across domains.' },
   { icon: Route, title: 'Learning roadmaps', text: 'Turn each skill gap into ordered stages, projects and milestones.' },
   { icon: Sparkles, title: 'SkillProof', text: 'Separate what you claim from what you have practised, demonstrated and had verified.' },
 ]
@@ -49,3 +49,4 @@ export default function Landing() {
     </>
   )
 }
+

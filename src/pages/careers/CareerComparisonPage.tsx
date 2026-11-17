@@ -1,19 +1,25 @@
 import { useEffect, useState } from 'react'
-import { careerMeta, careers } from '../../data/careers'
-import { byName } from '../../data/skills'
+import type { Career } from '../../data/careers'
 import { useAuth } from '../../contexts/AuthContext'
 import { loadProfile } from '../../data/profile'
-import { profilesApi } from '../../services/api'
-
-const rank = { Beginner: 1, Intermediate: 2, Advanced: 3 }
-// Demo rule: average difficulty of the skills you still need.
-const difficulty = (miss: string[]) => { if (!miss.length) return 'None'; const a = miss.reduce((t, s) => t + rank[byName(s)?.difficulty ?? 'Intermediate'], 0) / miss.length; return a < 1.7 ? 'Lower' : a < 2.4 ? 'Moderate' : 'Higher' }
+import { careersApi, profilesApi } from '../../services/api'
 
 export default function CareerComparisonPage() {
   const { user } = useAuth()
+  const [careers, setCareers] = useState<Career[]>([])
   const [userSkills, setUserSkills] = useState<string[] | null>(null)
   const [profileError, setProfileError] = useState('')
-  const [sel, setSel] = useState<string[]>([careers[0].id, careers[1].id])
+  const [sel, setSel] = useState<string[]>([])
+  useEffect(() => {
+    let active = true
+    careersApi.list().then(items => {
+      if (!active) return
+      const catalog = items as Career[]
+      setCareers(catalog)
+      setSel(catalog.slice(0, 2).map(c => c.id))
+    }).catch(e => { if (active) setProfileError(e instanceof Error ? e.message : 'Could not load careers.') })
+    return () => { active = false }
+  }, [])
   useEffect(() => {
     if (!user) return
     let active = true
@@ -28,18 +34,18 @@ export default function CareerComparisonPage() {
   }, [user])
   const toggle = (id: string) => setSel(s => (s.includes(id) ? s.filter(x => x !== id) : s.length < 3 ? [...s, id] : s))
   const cols = careers.filter(c => sel.includes(c.id))
-  const rows: [string, (c: (typeof careers)[number]) => React.ReactNode][] = [
+  const matchedCount = (c: Career) => userSkills === null ? null : c.required.filter(required =>
+    userSkills.some(skill => skill.trim().toLocaleLowerCase() === required.toLocaleLowerCase()),
+  ).length
+  const rows: [string, (c: Career) => React.ReactNode][] = [
     ['Category', c => c.category],
     ['Required skills', c => <ul>{c.required.map(s => <li key={s}>{userSkills === null ? '？ unknown' : userSkills.some(skill => skill.trim().toLocaleLowerCase() === s.toLocaleLowerCase()) ? '✓ you have' : '○ missing'}: {s}</li>)}</ul>],
-    ['Skills matched', c => userSkills === null ? 'Unknown' : `${c.required.filter(s => userSkills.some(skill => skill.trim().toLocaleLowerCase() === s.toLocaleLowerCase())).length} of ${c.required.length}`],
-    ['Learning difficulty (rough estimate)', c => userSkills === null ? 'Unknown' : difficulty(c.required.filter(s => !userSkills.some(skill => skill.trim().toLocaleLowerCase() === s.toLocaleLowerCase())))],
-    ['Education (sample guidance)', c => careerMeta[c.id].education],
-    ['Specializations (examples)', c => careerMeta[c.id].specs.join(', ')],
-    ['Related careers (examples)', c => careerMeta[c.id].related.join(', ')],
+    ['Skills matched', c => matchedCount(c) === null ? 'Unknown' : `${matchedCount(c)} of ${c.required.length}`],
+    ['Career compatibility', c => matchedCount(c) === null ? 'Unknown' : `${c.required.length ? Math.round(100 * matchedCount(c)! / c.required.length) : 0}%`],
   ]
   return (
     <div className="mx-auto max-w-6xl space-y-5">
-      <div><h1 className="text-2xl font-semibold text-[#1d1d1f]">Career Comparison</h1><p className="text-sm text-[#6e6e73]">Compare sample career requirements with the technical skills saved in your profile. Matches reflect listed skills, not verified proficiency. Learning difficulty is a rough estimate; education, specializations and related careers are sample guidance.</p></div>
+      <div><h1 className="text-2xl font-semibold text-[#1d1d1f]">Career Comparison</h1><p className="text-sm text-[#6e6e73]">Compare career requirements with the technical skills saved in your profile.</p></div>
       {profileError && <p role="alert" className="text-sm text-[#d70015]">{profileError}</p>}
       <div className="flex flex-wrap gap-2" role="group" aria-label="Choose careers to compare">{careers.map(c => <button key={c.id} aria-pressed={sel.includes(c.id)} disabled={!sel.includes(c.id) && sel.length >= 3} onClick={() => toggle(c.id)} className={`btn-ghost !py-1.5 ${sel.includes(c.id) ? 'bg-[#007AFF]/10 text-[#007AFF]' : ''}`}>{c.title}</button>)}</div>
       {cols.length < 2 ? <p className="glass p-6">Select at least two careers to compare.</p> : (

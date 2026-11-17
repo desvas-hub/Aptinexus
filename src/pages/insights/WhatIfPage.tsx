@@ -25,7 +25,10 @@ export default function WhatIfPage() {
     let active = true
     setLoading(true)
     setError('')
-    whatIfApi.simulate(extra).then(result => {
+    profilesApi.get(user.id, loadProfile(user)).then(profile => {
+      const skillsInProfile = profile.sections?.technical ?? []
+      return whatIfApi.simulate(extra, skillsInProfile)
+    }).then(result => {
       if (active) setRows(result as Projection[])
     }).catch(e => {
       if (active) setError(e instanceof Error ? e.message : 'Could not calculate projections.')
@@ -44,11 +47,12 @@ export default function WhatIfPage() {
       <div><h1 className="text-2xl font-semibold text-[#1d1d1f]">What-If Simulator</h1><p className="text-sm text-[#6e6e73]">Try hypothetical skills and projects. Nothing here changes your profile unless you choose to save it.</p></div>
       <section className="glass space-y-4 p-5"><div><h2 className="mb-2 font-medium text-[#1d1d1f]">Hypothetical skills</h2><div className="flex flex-wrap gap-2">{library.map(l => <button key={l.name} aria-pressed={skills.includes(l.name)} className={chip(skills.includes(l.name))} onClick={() => flip(skills, l.name, setSkills)}>{l.name}</button>)}</div></div>
         <div><h2 className="mb-2 font-medium text-[#1d1d1f]">Hypothetical projects</h2><div className="flex flex-wrap gap-2">{Object.keys(presets).map(p => <button key={p} aria-pressed={projs.includes(p)} className={chip(projs.includes(p))} onClick={() => flip(projs, p, setProjs)}>{p}</button>)}</div></div></section>
-      <p className="rounded-xl border border-violet-400/30 bg-violet-400/10 p-3 text-sm text-[#8944ab]" role="status">{extra.length ? `Hypothetical: adding ${extra.join(', ')}. These scores are not your real profile.` : 'Choose skills or projects above to see how your career estimates could change.'}</p>
+      <p className="rounded-xl border border-violet-400/30 bg-violet-400/10 p-3 text-sm text-[#8944ab]" role="status">{extra.length ? `Projection includes ${extra.join(', ')}. These skills are not saved unless you choose Save to my profile.` : 'Choose skills or projects to see how they affect your career matches.'}</p>
       {error && <p role="alert" className="text-sm text-[#d70015]">{error}</p>}
       <div className="glass overflow-x-auto"><table className="w-full min-w-[520px] text-left text-sm"><thead><tr className="border-b border-black/[0.08] text-[#6e6e73]"><th className="p-3 font-normal">Career</th><th className="p-3 font-normal">Current</th><th className="p-3 font-normal">Hypothetical</th><th className="p-3 font-normal">Still needed</th></tr></thead>
-        <tbody>{rows.map(r => { const career = careers.find(c => c.id === r.id); return <tr key={r.id} className="border-b border-black/[0.08]"><td className="p-3 text-[#1d1d1f]">{career?.title ?? r.id}</td><td className="p-3">~{r.current}%</td><td className="p-3 text-[#8944ab]">~{r.hypothetical}% {r.change > 0 && <span className="text-[#248a3d]">(+{r.change})</span>}</td><td className="p-3 text-xs">{r.stillNeeded.join(', ') || 'None'}</td></tr> })}</tbody></table>{loading && <p className="p-3 text-xs text-[#6e6e73]">Updating projections…</p>}</div>
+        <tbody>{rows.map(r => { const career = careers.find(c => c.id === r.id); return <tr key={r.id} className="border-b border-black/[0.08]"><td className="p-3 text-[#1d1d1f]">{career?.title ?? r.id}</td><td className="p-3">{r.current}%</td><td className="p-3 text-[#8944ab]">{r.hypothetical}% {r.change > 0 && <span className="text-[#248a3d]">(+{r.change})</span>}</td><td className="p-3 text-xs">{r.stillNeeded.join(', ') || 'None'}</td></tr> })}</tbody></table>{loading && <p className="p-3 text-xs text-[#6e6e73]">Updating projections…</p>}</div>
       <div className="flex items-center gap-3"><button className="btn-primary" disabled={!extra.length} onClick={save}>Save to my profile</button><button className="btn-ghost" onClick={() => { setSkills([]); setProjs([]); setMsg('') }}>Clear</button>{msg && <span role="status" className="text-sm text-[#007AFF]">{msg}</span>}</div>
     </div>
   )
 }
+

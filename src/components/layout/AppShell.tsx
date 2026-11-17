@@ -57,10 +57,11 @@ export default function AppShell() {
             <input className="input pl-10" placeholder="Jump to a page" aria-label="Search pages" value={q} onChange={e => setQ(e.target.value)} onKeyDown={e => { if (e.key === 'Enter' && results[0]) go(results[0][1]); if (e.key === 'Escape') setQ('') }} />
             {q && <ul role="listbox" aria-label="Search results" className="glass absolute inset-x-0 top-12 z-40 overflow-hidden bg-white/85 p-1.5">
               {results.length ? results.map(([n, to, Icon]) => <li key={to}><button role="option" aria-selected="false" className="nav-item w-full" onClick={() => go(to)}><Icon size={16} />{n}</button></li>) : <li className="px-3 py-2 text-sm text-[#6e6e73]">No matching pages</li>}</ul>}</div>
-          <Link to="/app/notifications" className="relative rounded-xl border border-black/[0.08] bg-black/[0.05] p-2.5 hover:bg-black/[0.06]" aria-label="Notifications"><Bell size={17} /><span className="absolute right-2 top-2 h-1.5 w-1.5 rounded-full bg-[#FF3B30]" /></Link>
+          <Link to="/app/notifications" className="relative rounded-xl border border-black/[0.08] bg-black/[0.05] p-2.5 hover:bg-black/[0.06]" aria-label="Notifications"><Bell size={17} /></Link>
         </header>
         <motion.main key={pathname} className="flex-1 p-5 md:p-8" initial={calm ? false : { opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.28, ease: 'easeOut' }}><Outlet /></motion.main>
       </div>
     </div>
   )
 }
+

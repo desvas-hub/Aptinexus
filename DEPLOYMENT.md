@@ -25,7 +25,7 @@ The API start command runs `alembic upgrade head` before Uvicorn. Production sch
 
 - Open the Vercel URL and register a new test account.
 - Confirm login, profile saving, career discovery, skill gaps, roadmap progress, assessments, SkillGraph and resume parsing.
-- Use a small PDF or DOCX containing non-sensitive sample text for the resume test. Do not upload private identity documents to a demo deployment.
+- Use a small PDF or DOCX containing non-sensitive text when checking resume parsing.
 - Confirm the API health endpoint returns `{"status":"ok","service":"aptinexus-api"}`.
 
 ## Preview-environment limitations
@@ -34,4 +34,5 @@ The Blueprint intentionally uses free Render plans to make a low-cost preview po
 
 ## Local development
 
-Local development remains unchanged. The backend defaults to SQLite and `AUTO_CREATE_TABLES=true`; the frontend remains in mock mode unless `VITE_USE_MOCK=false` is set.
+The backend defaults to SQLite and `AUTO_CREATE_TABLES=true`. The frontend uses the API by default; set `VITE_USE_MOCK=true` only when intentionally using the local adapter.
+

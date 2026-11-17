@@ -8,7 +8,7 @@ import type { User } from '../../types'
 
 type Origin = 'explicit' | 'inferred' | 'confirmed'
 interface Item { id: number; section: string; target: string | null; text: string; origin: Origin; state: 'pending' | 'approved' | 'rejected' }
-const originLabel: Record<Origin, string> = { explicit: 'Mentioned in resume', inferred: 'Inferred (demo)', confirmed: 'Confirmed by you' }
+const originLabel: Record<Origin, string> = { explicit: 'Mentioned in resume', inferred: 'Suggested', confirmed: 'Confirmed by you' }
 
 export default function ResumeAnalysisPage() {
   const user = useAuth().user as User
@@ -69,3 +69,4 @@ export default function ResumeAnalysisPage() {
     </div>
   )
 }
+

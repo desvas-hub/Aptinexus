@@ -1,9 +1,9 @@
 export const API_BASE_URL: string = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8000/api/v1'
-export const USE_MOCK: boolean = import.meta.env.VITE_USE_MOCK !== 'false'
+export const USE_MOCK: boolean = import.meta.env.VITE_USE_MOCK === 'true'
 let accessToken: string | null = null
 export const setAccessToken = (t: string | null) => { accessToken = t }
 
-/** Single entry point for every API module. Mock mode remains enabled unless explicitly disabled. */
+/** Single entry point for every API module. Local mock mode must be enabled explicitly. */
 export async function request<T>(path: string, init: RequestInit | undefined, mock: () => Promise<T>): Promise<T> {
   if (USE_MOCK) return mock()
   const isForm = typeof FormData !== 'undefined' && init?.body instanceof FormData
@@ -17,3 +17,4 @@ export async function request<T>(path: string, init: RequestInit | undefined, mo
   }
   return res.json() as Promise<T>
 }
+

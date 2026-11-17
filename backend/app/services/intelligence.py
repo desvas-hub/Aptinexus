@@ -34,8 +34,7 @@ def user_skill_names(db: Session, user: User) -> set[str]:
     if isinstance(profile, dict):
         sections = profile.get("sections", {})
         if isinstance(sections, dict):
-            for key in ("technical", "subjects", "projects", "certifications", "experience"):
-                names.update(_strings(sections.get(key)))
+            names.update(_strings(sections.get("technical")))
     evidence = read_user_value(db, user.id, "evidence", [])
     if isinstance(evidence, list):
         for item in evidence:
@@ -91,8 +90,9 @@ def profile_completion(db: Session, user: User) -> int:
 
 def career_match(career: dict, acquired: set[str]) -> dict:
     required = career.get("required", [])
-    matched = [name for name in required if name in acquired]
-    missing = [name for name in required if name not in acquired]
+    acquired_keys = {name.casefold() for name in acquired}
+    matched = [name for name in required if name.casefold() in acquired_keys]
+    missing = [name for name in required if name.casefold() not in acquired_keys]
     compatibility = round(100 * len(matched) / len(required)) if required else 0
     return {
         "id": career["id"],
@@ -109,18 +109,19 @@ def career_match(career: dict, acquired: set[str]) -> dict:
 
 def dashboard_data(db: Session, user: User) -> dict:
     acquired = user_skill_names(db, user)
+    acquired_keys = {name.casefold() for name in acquired}
     evidenced = evidenced_skill_names(db, user)
+    evidenced_keys = {name.casefold() for name in evidenced}
     skill_rows = []
     for item in SKILLS:
         name = item["name"]
-        if name not in acquired:
+        if name.casefold() not in acquired_keys:
             continue
-        status = "Demonstrated" if name in evidenced else "Claimed"
+        status = "Demonstrated" if name.casefold() in evidenced_keys else "Claimed"
         skill_rows.append({
             "id": name.lower().replace(" ", "-"),
             "name": name,
             "category": item["category"],
-            "level": 100 if status == "Demonstrated" else 65,
             "status": status,
         })
     matches = sorted(
@@ -145,15 +146,16 @@ def career_gaps(db: Session, user: User, career_id: str) -> dict:
     if career is None:
         return None
     acquired = user_skill_names(db, user)
+    acquired_keys = {name.casefold() for name in acquired}
     required = career.get("required", [])
     return {
         "careerId": career_id,
-        "strengths": [name for name in required if name in acquired],
-        "missing": [name for name in required if name not in acquired],
+        "strengths": [name for name in required if name.casefold() in acquired_keys],
+        "missing": [name for name in required if name.casefold() not in acquired_keys],
         "optional": [
             item["name"] for item in SKILLS
             if item["name"] not in required
-            and item["name"] not in acquired
+            and item["name"].casefold() not in acquired_keys
             and any(related in required for related in item.get("related", []))
         ][:3],
         "method": "Compares skills in your saved profile and evidence with this career's listed requirements.",
@@ -163,6 +165,7 @@ def career_gaps(db: Session, user: User, career_id: str) -> dict:
 def simulate_career_matches(db: Session, user: User, extra_skills: list[str]) -> list[dict]:
     acquired = user_skill_names(db, user)
     hypothetical = acquired | {name.strip() for name in extra_skills if isinstance(name, str) and name.strip()}
+    hypothetical_keys = {name.casefold() for name in hypothetical}
     current = {item["id"]: item for item in (career_match(c, acquired) for c in CAREERS)}
     projected = []
     for career in CAREERS:
@@ -173,6 +176,7 @@ def simulate_career_matches(db: Session, user: User, extra_skills: list[str]) ->
             "current": before,
             "hypothetical": after,
             "change": after - before,
-            "stillNeeded": [name for name in career.get("required", []) if name not in hypothetical],
+            "stillNeeded": [name for name in career.get("required", []) if name.casefold() not in hypothetical_keys],
         })
     return sorted(projected, key=lambda item: (-item["hypothetical"], item["id"]))
+
