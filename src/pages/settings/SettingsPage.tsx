@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import { useAuth } from '../../contexts/AuthContext'
 import { useRemote } from '../../hooks/useRemote'
+import { useTheme } from '../../contexts/ThemeContext'
+import { Moon, Sun } from 'lucide-react'
 
 const tabs = ['Profile preferences', 'Appearance', 'Notifications', 'Account', 'Privacy']
 const defaults = { focus: 'Engineering', hours: 5, n_reminders: true, n_milestones: true, n_recs: true, n_results: true, n_profile: false, share: false, analytics: false }
@@ -9,6 +11,7 @@ const Toggle = ({ label, on, set }: { label: string; on: boolean; set: (v: boole
 
 export default function SettingsPage() {
   const { user, logout } = useAuth()
+  const { theme, setTheme } = useTheme()
   const [tab, setTab] = useState(tabs[0])
   const [s, setS] = useRemote<S>('settings', user?.id, defaults)
   const [motion, setMotion] = useState(() => localStorage.getItem('aptinexus.reduceMotion') === 'true')
@@ -25,7 +28,12 @@ export default function SettingsPage() {
         {tab === 'Profile preferences' && <>
           <label className="block text-sm">Career focus<select className="input mt-1" value={s.focus} onChange={e => up('focus', e.target.value)}>{['Engineering', 'Software', 'Product', 'Research'].map(f => <option key={f}>{f}</option>)}</select></label>
           <label className="block text-sm">Weekly learning goal (hours)<input type="number" min={1} max={40} className="input mt-1" value={s.hours} onChange={e => up('hours', Math.min(40, Math.max(1, Number(e.target.value) || 1)))} /></label></>}
-        {tab === 'Appearance' && <><Toggle label="Reduce motion" on={motion} set={setReduce} /><p className="text-xs text-[#6e6e73]">AptiNexus currently has a dark theme only. Your system’s reduced-motion setting is always respected.</p></>}
+        {tab === 'Appearance' && <>
+          <div className="space-y-2"><p className="text-sm">Color theme</p><div role="group" aria-label="Choose color theme" className="flex flex-wrap gap-2">
+            <button type="button" aria-pressed={theme === 'light'} onClick={() => setTheme('light')} className={`btn-ghost ${theme === 'light' ? 'bg-[#007AFF]/10 text-[#007AFF]' : ''}`}><Sun size={16} />Light</button>
+            <button type="button" aria-pressed={theme === 'dark'} onClick={() => setTheme('dark')} className={`btn-ghost ${theme === 'dark' ? 'bg-[#007AFF]/10 text-[#007AFF]' : ''}`}><Moon size={16} />Dark</button>
+          </div><p className="text-xs text-[#6e6e73]">Your choice is saved in this browser.</p></div>
+          <Toggle label="Reduce motion" on={motion} set={setReduce} /><p className="text-xs text-[#6e6e73]">Your system’s reduced-motion setting is always respected.</p></>}
         {tab === 'Notifications' && <><Toggle label="Learning reminders" on={s.n_reminders} set={v => up('n_reminders', v)} /><Toggle label="Roadmap milestones" on={s.n_milestones} set={v => up('n_milestones', v)} /><Toggle label="Skill recommendations" on={s.n_recs} set={v => up('n_recs', v)} /><Toggle label="Assessment results" on={s.n_results} set={v => up('n_results', v)} /><Toggle label="Profile updates" on={s.n_profile} set={v => up('n_profile', v)} /></>}
         {tab === 'Account' && <><p className="text-sm">Name: <span className="text-[#1d1d1f]">{user?.name}</span></p><p className="text-sm">Email: <span className="text-[#1d1d1f]">{user?.email}</span></p>
           <p className="text-xs text-[#6e6e73]">Password changes and account deletion need the backend and aren’t available in the demo.</p>
@@ -36,3 +44,4 @@ export default function SettingsPage() {
     </div>
   )
 }
+
