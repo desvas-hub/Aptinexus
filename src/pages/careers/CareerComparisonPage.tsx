@@ -34,10 +34,14 @@ export default function CareerComparisonPage() {
   }, [user])
   const toggle = (id: string) => setSel(s => (s.includes(id) ? s.filter(x => x !== id) : s.length < 3 ? [...s, id] : s))
   const cols = careers.filter(c => sel.includes(c.id))
+  const matchedCount = (c: Career) => userSkills === null ? null : c.required.filter(required =>
+    userSkills.some(skill => skill.trim().toLocaleLowerCase() === required.toLocaleLowerCase()),
+  ).length
   const rows: [string, (c: Career) => React.ReactNode][] = [
     ['Category', c => c.category],
     ['Required skills', c => <ul>{c.required.map(s => <li key={s}>{userSkills === null ? '？ unknown' : userSkills.some(skill => skill.trim().toLocaleLowerCase() === s.toLocaleLowerCase()) ? '✓ you have' : '○ missing'}: {s}</li>)}</ul>],
-    ['Skills matched', c => userSkills === null ? 'Unknown' : `${c.required.filter(s => userSkills.some(skill => skill.trim().toLocaleLowerCase() === s.toLocaleLowerCase())).length} of ${c.required.length}`],
+    ['Skills matched', c => matchedCount(c) === null ? 'Unknown' : `${matchedCount(c)} of ${c.required.length}`],
+    ['Career compatibility', c => matchedCount(c) === null ? 'Unknown' : `${c.required.length ? Math.round(100 * matchedCount(c)! / c.required.length) : 0}%`],
   ]
   return (
     <div className="mx-auto max-w-6xl space-y-5">
