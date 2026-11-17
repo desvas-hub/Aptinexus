@@ -2,6 +2,7 @@ import { lazy, Suspense } from 'react'
 import { BrowserRouter, Route, Routes } from 'react-router-dom'
 import { ToastProvider } from './contexts/ToastContext'
 import { AuthProvider } from './contexts/AuthContext'
+import { ThemeProvider } from './contexts/ThemeContext'
 import PublicLayout from './components/layout/PublicLayout'
 import AppShell from './components/layout/AppShell'
 
@@ -33,7 +34,7 @@ const CareerDiscovery = lazy(() => import('./pages/careers/CareerDiscovery'))
 
 export default function App() {
   return (
-    <ToastProvider><AuthProvider><BrowserRouter>
+    <ThemeProvider><ToastProvider><AuthProvider><BrowserRouter>
       <Suspense fallback={<div className="grid min-h-[40vh] place-items-center"><span className="spinner" role="status" aria-label="Loading" /></div>}>
         <Routes>
           <Route element={<PublicLayout />}><Route index element={<Landing />} /><Route path="about" element={<AboutPage />} /><Route path="how-it-works" element={<HowItWorksPage />} /><Route path="features" element={<FeaturesPage />} /><Route path="careers" element={<PublicCareersPage />} /></Route>
@@ -43,6 +44,7 @@ export default function App() {
           <Route path="*" element={<PublicLayout />}><Route path="*" element={<div className="p-20 text-center">Page not found.</div>} /></Route>
         </Routes>
       </Suspense>
-    </BrowserRouter></AuthProvider></ToastProvider>
+    </BrowserRouter></AuthProvider></ToastProvider></ThemeProvider>
   )
 }
+
