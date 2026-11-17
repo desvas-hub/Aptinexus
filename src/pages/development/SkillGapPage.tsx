@@ -2,31 +2,38 @@ import { useEffect, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import CareerPicker from '../../components/careers/CareerPicker'
 import { careers } from '../../data/careers'
-import { analyse, byName, priorityOf, statusOf, type Priority } from '../../data/skills'
-import { gapsApi } from '../../services/api'
+import { byName, priorityOf, type Priority } from '../../data/skills'
+import { gapsApi, profilesApi } from '../../services/api'
+import { useAuth } from '../../contexts/AuthContext'
+import { loadProfile } from '../../data/profile'
 
 const order: Priority[] = ['Essential', 'Recommended', 'Specialization-specific', 'Optional']
 interface GapResult { strengths: string[]; missing: string[]; optional: string[]; method?: string }
 
 export default function SkillGapPage() {
+  const { user } = useAuth()
   const [sp, setSp] = useSearchParams()
   const career = careers.find(c => c.id === sp.get('career')) ?? careers[0]
-  const [result, setResult] = useState<GapResult>(() => analyse(career))
+  const [result, setResult] = useState<GapResult | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
 
   useEffect(() => {
     let active = true
-    setLoading(true); setError('')
-    gapsApi.analyse(career.id).then(data => {
+    setLoading(true); setError(''); setResult(null)
+    if (!user) return () => { active = false }
+    profilesApi.get(user.id, loadProfile(user)).then(profile => gapsApi.analyse(career.id, profile.sections?.technical ?? [])).then(data => {
       if (active && data) setResult(data as GapResult)
+      else if (active) setError('Could not calculate skill gaps.')
     }).catch(e => {
       if (active) setError(e instanceof Error ? e.message : 'Could not calculate skill gaps.')
     }).finally(() => { if (active) setLoading(false) })
     return () => { active = false }
-  }, [career.id])
+  }, [career.id, user])
 
-  const { strengths, missing, optional } = result
+  const strengths = result?.strengths ?? []
+  const missing = result?.missing ?? []
+  const optional = result?.optional ?? []
   const items = [...missing.map(s => ({ s, p: priorityOf(career, s) })), ...optional.map(s => ({ s, p: 'Optional' as Priority }))]
   const coverage = career.required.length ? Math.round((strengths.length / career.required.length) * 100) : 0
   return (
@@ -35,14 +42,14 @@ export default function SkillGapPage() {
         <CareerPicker value={career.id} onChange={id => setSp({ career: id })} /></div>
       {loading && <p className="glass p-4 text-sm text-[#6e6e73]">Calculating your skill gaps…</p>}
       {error && <p role="alert" className="text-sm text-[#d70015]">{error}</p>}
-      <div className="grid gap-4 md:grid-cols-3">
+      {result && <div className="grid gap-4 md:grid-cols-3">
         <div className="glass p-5"><p className="text-sm text-[#6e6e73]">Skill coverage</p><p className="text-3xl text-[#1d1d1f]">{coverage}%</p>
           <div className="mt-2 h-2 rounded-full bg-black/[0.05]" role="progressbar" aria-valuenow={coverage} aria-valuemin={0} aria-valuemax={100}><div className="h-2 rounded-full bg-nexus-cyan" style={{ width: `${coverage}%` }} /></div>
           <p className="mt-3 text-xs text-[#6e6e73]">{strengths.length} of {career.required.length} required skills listed</p></div>
         <section className="glass p-5 md:col-span-2"><h2 className="mb-2 font-medium text-[#1d1d1f]">Current strengths</h2>
-          {strengths.length ? <div className="flex flex-wrap gap-2">{strengths.map(s => <span key={s} className="rounded-full border border-emerald-400/30 px-3 py-1 text-sm">{s} <span className="text-xs text-[#6e6e73]">· {statusOf(s)}</span></span>)}</div> : <p className="text-sm text-[#6e6e73]">No matching skills yet. Start with an Essential skill below.</p>}</section>
-      </div>
-      {missing.length === 0 && <p className="glass p-5">You have listed every required skill for this career. This is not an independent verification of proficiency.</p>}
+          {strengths.length ? <div className="flex flex-wrap gap-2">{strengths.map(s => <span key={s} className="rounded-full border border-emerald-400/30 px-3 py-1 text-sm">{s}</span>)}</div> : <p className="text-sm text-[#6e6e73]">No matching skills are listed yet.</p>}</section>
+      </div>}
+      {result && missing.length === 0 && <p className="glass p-5">Your profile lists every required skill for this career.</p>}
       {order.map(p => { const g = items.filter(i => i.p === p); return g.length > 0 && (
         <section key={p}><h2 className="mb-2 font-medium text-[#1d1d1f]">{p}</h2>
           <div className="grid gap-3 md:grid-cols-2">{g.map(({ s }) => { const l = byName(s); const need = l?.prereqs.filter(r => !strengths.includes(r)) ?? []
@@ -51,7 +58,8 @@ export default function SkillGapPage() {
               <p className="mt-2 text-xs text-[#6e6e73]">Depends on: {l?.prereqs.join(', ') || 'nothing'}{need.length ? ` (not yet listed: ${need.join(', ')})` : ''}</p>
               <p className="mt-1 text-xs text-[#007AFF]">Suggested project: a small {career.title.toLowerCase()} exercise that uses {s}.</p></article> })}</div></section>) })}
       <p className="glass p-4 text-sm">Recommended learning for this career: {career.learn.join(', ')}.</p>
-      <p className="text-xs text-[#6e6e73]">Method: {result.method ?? 'Compares your listed skills with the sample career requirements.'} Scores are guidance, not hiring predictions.</p>
+      {result?.method && <p className="text-xs text-[#6e6e73]">{result.method}</p>}
     </div>
   )
 }
+
