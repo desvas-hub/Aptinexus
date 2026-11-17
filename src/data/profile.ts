@@ -9,7 +9,7 @@ export const sectionDefs = [
 ]
 export const loadProfile = (u: User): ProfileData => {
   try { const raw = localStorage.getItem(`aptinexus.profile.${u.id}`); if (raw) return JSON.parse(raw) } catch { /* fall through to defaults */ }
-  return { personal: { name: u.name, headline: u.headline, location: '' }, sections: { education: ['B.E. Mechanical Engineering (in progress)'], technical: ['Python', 'CAD Design', 'Embedded C'], interests: ['Robotics'], projects: ['Line-following rover'] } }
+  return { personal: { name: u.name, headline: u.headline, location: '' }, sections: {} }
 }
 export const saveProfile = (u: User, p: ProfileData) => localStorage.setItem(`aptinexus.profile.${u.id}`, JSON.stringify(p))
 export const completion = (p: ProfileData) => {
@@ -21,3 +21,4 @@ export const validateResume = (f: File): string | null => {
   if (f.size > 5 * 1024 * 1024) return 'The file is larger than 5 MB. Choose a smaller file.'
   return null
 }
+
